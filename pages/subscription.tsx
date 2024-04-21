@@ -592,10 +592,10 @@ const coins = [
     },
 ];
 
-const Crypto = () => {
+const Subscription = () => {
     const dispatch = useDispatch();
     useEffect(() => {
-        dispatch(setPageTitle('Crypto'));
+        dispatch(setPageTitle('Subscription'));
     });
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
@@ -606,7 +606,7 @@ const Crypto = () => {
     });
 
     const [currentCoin, setCurrentCoin] = useState(coins[0]);
-    const [isShowCryptoMenu, setIsShowCryptoMenu] = useState(false);
+    const [isShowSubscriptionMenu, setIsShowSubscriptionMenu] = useState(false);
 
     const profiteChartOption: any = {
         chart: {
@@ -798,13 +798,13 @@ const Crypto = () => {
                     </Link>
                 </li>
                 <li className="before:content-['/'] ltr:before:mr-2 rtl:before:ml-2">
-                    <span>Crypto</span>
+                    <span>Subscription</span>
                 </li>
             </ul>
             <div className="relative mt-5 flex flex-col gap-5 xl:flex-row">
                 <div
                     className={`${
-                        isShowCryptoMenu ? '!block h-full xl:h-auto' : ''
+                        isShowSubscriptionMenu ? '!block h-full xl:h-auto' : ''
                     } panel absolute z-10 hidden w-80 flex-none divide-y divide-[#ebedf2] overflow-y-auto border-0 p-0 dark:divide-[#191e3a] xl:relative xl:block`}
                 >
                     {coins.map((item) => {
@@ -815,7 +815,7 @@ const Crypto = () => {
                                     className={`${item.id === currentCoin.id ? 'bg-gray-100 dark:bg-[#192A3A]' : ''} flex w-full items-center p-4 hover:bg-gray-100 dark:hover:bg-[#192A3A]`}
                                     onClick={() => {
                                         setCurrentCoin(item);
-                                        setIsShowCryptoMenu(!isShowCryptoMenu);
+                                        setIsShowSubscriptionMenu(!isShowSubscriptionMenu);
                                     }}
                                 >
                                     <div className="ltr:pr-4 rtl:pl-4">
@@ -841,14 +841,14 @@ const Crypto = () => {
                     })}
                 </div>
                 <div
-                    className={`absolute z-[5] hidden h-full w-full rounded-md bg-black/60 ${isShowCryptoMenu ? '!block xl:!hidden' : ''}`}
-                    onClick={() => setIsShowCryptoMenu(!isShowCryptoMenu)}
+                    className={`absolute z-[5] hidden h-full w-full rounded-md bg-black/60 ${isShowSubscriptionMenu ? '!block xl:!hidden' : ''}`}
+                    onClick={() => setIsShowSubscriptionMenu(!isShowSubscriptionMenu)}
                 ></div>
 
                 <div className="panel flex-1 p-0">
                     <div className="flex-wrap items-center border-b border-[#ebedf2] p-4 dark:border-[#191e3a] md:flex">
                         <div className="flex flex-1 items-start ltr:pr-4 rtl:pl-4">
-                            <button onClick={() => setIsShowCryptoMenu(!isShowCryptoMenu)} type="button" className="block hover:text-primary ltr:mr-5 rtl:ml-5 xl:hidden">
+                            <button onClick={() => setIsShowSubscriptionMenu(!isShowSubscriptionMenu)} type="button" className="block hover:text-primary ltr:mr-5 rtl:ml-5 xl:hidden">
                                 <IconMenu />
                             </button>
                             <div>
@@ -959,4 +959,4 @@ const Crypto = () => {
     );
 };
 
-export default Crypto;
+export default Subscription;

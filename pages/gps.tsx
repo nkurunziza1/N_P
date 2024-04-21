@@ -80,9 +80,10 @@ const Tables = () => {
             setCodeArr([...codeArr, name]);
         }
     };
+
+
     return (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            {/* Simple */}
             <div className="panel">
                 <div className="mb-5 flex items-center justify-between">
                     <h5 className="text-lg font-semibold dark:text-white-light">Simple Table</h5>

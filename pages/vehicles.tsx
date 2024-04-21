@@ -11,10 +11,10 @@ const ReactApexChart = dynamic(() => import('react-apexcharts'), {
     ssr: false,
 });
 
-const Charts = () => {
+const Vehicles = () => {
     const dispatch = useDispatch();
     useEffect(() => {
-        dispatch(setPageTitle('Charts'));
+        dispatch(setPageTitle('Vehicles'));
     });
     const [codeArr, setCodeArr] = useState<string[]>([]);
 
@@ -687,7 +687,7 @@ const Charts = () => {
                     </Link>
                 </li>
                 <li className="before:content-['/'] ltr:before:mr-2 rtl:before:ml-2">
-                    <span>Charts</span>
+                    <span>Vehicles</span>
                 </li>
             </ul>
 
@@ -697,8 +697,8 @@ const Charts = () => {
                         <IconBell />
                     </div>
                     <span className="ltr:mr-3 rtl:ml-3">Documentation: </span>
-                    <a href="https://www.npmjs.com/package/react-apexcharts" target="_blank" className="block hover:underline" rel="noreferrer">
-                        https://www.npmjs.com/package/react-apexcharts
+                    <a href="https://www.npmjs.com/package/react-apexVehicles" target="_blank" className="block hover:underline" rel="noreferrer">
+                        https://www.npmjs.com/package/react-apexVehicles
                     </a>
                 </div>
 
@@ -719,7 +719,7 @@ const Charts = () => {
                         <CodeHighlight>
                             <pre className="language-typescript">
                                 {`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -791,7 +791,7 @@ const lineChart: any = {
                     {codeArr.includes('code2') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -867,7 +867,7 @@ const areaChart: any = {
                     {codeArr.includes('code3') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -966,7 +966,7 @@ const columnChart: any = {
                     {codeArr.includes('code4') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1062,7 +1062,7 @@ const simpleColumnStacked: any = {
                     {codeArr.includes('code5') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1138,7 +1138,7 @@ const barChart: any = {
                     {codeArr.includes('code6') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1247,7 +1247,7 @@ const mixedChart: any = {
                     {codeArr.includes('code7') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1309,7 +1309,7 @@ const radarChart: any = {
                     {codeArr.includes('code8') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1369,7 +1369,7 @@ const pieChart: any = {
                     {codeArr.includes('code9') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1438,7 +1438,7 @@ const donutChart: any = {
                     {codeArr.includes('code10') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1519,7 +1519,7 @@ const polarAreaChart: any = {
                     {codeArr.includes('code11') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1591,7 +1591,7 @@ const radialBarChart: any = {
                     {codeArr.includes('code12') && (
                         <CodeHighlight>
                             <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
     ssr: false,
 });
 
@@ -1666,4 +1666,4 @@ const bubbleChart: any = {
     );
 };
 
-export default Charts;
+export default Vehicles;
