@@ -392,22 +392,22 @@ const Client = () => {
                     <div className="panel" id="custom_styles">
                         <div className="mb-5 grid grid-cols-3 gap-4">
                             <p className="flex items-center gap-2">
-                                <span className=" font-bold text-white">Email:</span>
+                                <span className=" font-bold dark:text-white">Email:</span>
 
                                 {user?.email}
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className=" font-bold text-white">National ID:</span>
+                                <span className=" font-bold dark:text-white">National ID:</span>
 
                                 {user?.NID}
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className=" font-bold text-white">Telephone:</span>
+                                <span className=" font-bold dark:text-white">Telephone:</span>
 
                                 {user?.phoneNumber}
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className=" font-bold text-white">CreatedA:</span>
+                                <span className=" font-bold dark:text-white">CreatedA:</span>
                                 {/*/@ts-ignore*/}
                                 {format(new Date(user?.createdAt), 'dd/MM/yyyy HH:mm:ss')}
                             </p>

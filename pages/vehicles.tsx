@@ -14,9 +14,10 @@ import { UsersType, VehicleInterface, VehicleType } from '@/components/utility/t
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import Modal from '@/components/model/Model';
-import { handleCreatVehicle, handleDeleteVehicle, handleGetVehicle } from '@/components/api/vehicle';
+import { handleCreatVehicle, handleDeleteVehicle, handleGetVehicle, handleUpdateVehicle } from '@/components/api/vehicle';
 import Select from 'react-select';
 import { handlegetAllUsers } from '@/components/api/client';
+import { number } from 'yup';
 const Client = () => {
     const dispatch = useDispatch();
     useEffect(() => {
@@ -86,7 +87,7 @@ const Client = () => {
         setModal(true);
     };
 
-    const [editUserData, setEditUserData] = useState<VehicleType>();
+    const [editVehicleData, setEditVehicleData] = useState<VehicleType>();
     const [editModal, setIsEditModal] = useState(false);
     const [viewModal, setViewModal] = useState(false);
     const [vehicle, setVehicle] = useState<VehicleInterface>();
@@ -94,7 +95,7 @@ const Client = () => {
     const showEditModal = (id: any) => {
         const vehicle = data.find((vehicle) => vehicle.id === id);
         if (vehicle) {
-            setEditUserData(vehicle);
+            setEditVehicleData(vehicle);
         }
         setIsEditModal(true);
     };
@@ -130,7 +131,7 @@ const Client = () => {
         users
             ?.filter((user) => user.id !== undefined)
             .map((user) => ({
-                value: user.id!.toString(),
+                value: user.id!,
                 label: `${user.firstName} ${user.lastName}`,
             })) || [];
 
@@ -153,7 +154,7 @@ const Client = () => {
                                 try {
                                     values.ManufactureYear = selectedYear;
                                     values.client = selectedUser;
-                                    console.log(values);
+                                    console.log('values', values);
                                     const response = await handleCreatVehicle(setLoading, values);
                                     setModal(false);
                                     getVehicle();
@@ -213,7 +214,7 @@ const Client = () => {
                                             )}
                                         </div>
                                         <div className={` ${submitCount ? (errors.VehicleModel ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
-                                            <label htmlFor="VehicleModel">Last Name </label>
+                                            <label htmlFor="VehicleModel">Vehicle Model </label>
                                             <Field name="VehicleModel" type="text" id="VehicleModel" placeholder="Enter vehicle model" className="form-input" />
 
                                             {submitCount ? (
@@ -242,9 +243,16 @@ const Client = () => {
                                                 value={selectedYear ? { value: selectedYear, label: selectedYear.toString() } : null}
                                                 onChange={(selectedOption) => setSelectedYear(selectedOption?.value ?? '')}
                                                 placeholder="Select Year"
+                                                menuPortalTarget={document.body}
+                                                styles={{
+                                                    menuPortal: (base) => ({
+                                                        ...base,
+                                                        zIndex: 9999,
+                                                    }),
+                                                }}
                                             />
                                             {submitCount ? (
-                                                errors.VehicleModel ? (
+                                                errors.ManufactureYear ? (
                                                     <div className="mt-1 text-danger">{errors.ManufactureYear}</div>
                                                 ) : (
                                                     <div className="mt-1 text-success">Looks Good!</div>
@@ -253,7 +261,7 @@ const Client = () => {
                                                 ''
                                             )}
                                         </div>
-                                        <div className="md:col-span-2">
+                                        <div className="z-50 md:col-span-2">
                                             <label htmlFor="userSelect" className="">
                                                 Select User
                                             </label>
@@ -263,9 +271,15 @@ const Client = () => {
                                                 options={options}
                                                 value={selectedUser ? { value: selectedUser, label: options.find((option) => option.value === selectedUser)?.label || '' } : null}
                                                 onChange={(selectedOption) => setSelectedUser(selectedOption?.value ?? '')}
-                                                placeholder="Select User"
+                                                menuPortalTarget={document.body}
+                                                styles={{
+                                                    menuPortal: (base) => ({
+                                                        ...base,
+                                                        zIndex: 9999,
+                                                    }),
+                                                }}
                                             />
-                                            {submitCount ? errors.VehicleModel ? <div className="mt-1 text-danger">{errors.client}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                            {submitCount ? errors.client ? <div className="mt-1 text-danger">{errors.client}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
                                         </div>
                                     </div>
                                     <button type="submit" className="btn btn-primary !mt-6" disabled={loading}>
@@ -380,19 +394,20 @@ const Client = () => {
                         <div className="mb-5">
                             <Formik
                                 initialValues={{
-                                    firstName: editUserData?.firstName || '',
-                                    lastName: editUserData?.lastName || '',
-                                    email: editUserData?.email || '',
-                                    phoneNumber: editUserData?.phoneNumber || '',
-                                    NID: editUserData?.NID || '',
+                                    VehicleType: editVehicleData?.VehicleType || '',
+                                    PlateNumber: editVehicleData?.PlateNumber || '',
+                                    VehicleModel: editVehicleData?.VehicleModel || '',
+                                    ChasisNumber: editVehicleData?.ChasisNumber || '',
+                                    ManufactureYear: editVehicleData?.ManufactureYear || '',
+                                    client: editVehicleData?.client || '',
                                 }}
-                                validationSchema={clientSchema}
+                                validationSchema={vehicleSchema}
                                 onSubmit={async (values, { setSubmitting }) => {
                                     try {
                                         console.log('editUserData', values);
-                                        const response = await handleUpdateUser(setLoading, values, editUserData?.id);
+                                        const response = await handleUpdateVehicle(setLoading, values, editVehicleData?.id);
                                         setIsEditModal(false);
-                                        getUser();
+                                        getVehicle();
                                     } catch (error) {
                                         console.log('error', error);
                                     } finally {
@@ -403,14 +418,14 @@ const Client = () => {
                             >
                                 {({ errors, submitCount, touched, values }) => (
                                     <Form className="space-y-5">
-                                        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-                                            <div className={submitCount ? (errors.firstName ? 'has-error' : 'has-success') : ''}>
-                                                <label htmlFor="firstName">First Name </label>
-                                                <Field name="firstName" type="text" id="firstName" placeholder="Enter First Name" className="form-input" />
+                                        <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+                                            <div className={`${submitCount ? (errors.VehicleType ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
+                                                <label htmlFor="VehicleType">Vehicle Type </label>
+                                                <Field name="VehicleType" type="text" id="VehicleType" placeholder="Enter vehicle type" className="form-input" />
 
                                                 {submitCount ? (
-                                                    errors.firstName ? (
-                                                        <div className="mt-1 text-danger">{errors.firstName}</div>
+                                                    errors.VehicleType ? (
+                                                        <div className="mt-1 text-danger">{errors.VehicleType}</div>
                                                     ) : (
                                                         <div className="mt-1 text-success">Looks Good!</div>
                                                     )
@@ -419,32 +434,29 @@ const Client = () => {
                                                 )}
                                             </div>
 
-                                            <div className={submitCount ? (errors.lastName ? 'has-error' : 'has-success') : ''}>
-                                                <label htmlFor="lastName">Last Name </label>
-                                                <Field name="lastName" type="text" id="lastName" placeholder="Enter Last Name" className="form-input" />
+                                            <div className={`${submitCount ? (errors.PlateNumber ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
+                                                <label htmlFor="PlateNumber">Plate Number </label>
+                                                <Field name="PlateNumber" type="text" id="PlateNumber" placeholder="Enter plate number" className="form-input" />
 
-                                                {submitCount ? errors.lastName ? <div className="mt-1 text-danger">{errors.lastName}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
-                                            </div>
-
-                                            <div className={submitCount ? (errors.email ? 'has-error' : 'has-success') : ''}>
-                                                <label htmlFor="email">Email</label>
-                                                <div className="flex">
-                                                    <div className="flex items-center justify-center border border-white-light bg-[#eee] px-3 font-semibold ltr:rounded-l-md ltr:border-r-0 rtl:rounded-r-md rtl:border-l-0 dark:border-[#17263c] dark:bg-[#1b2e4b]">
-                                                        @
-                                                    </div>
-                                                    <Field name="email" type="text" id="email" placeholder="Enter email" className="form-input ltr:rounded-l-none rtl:rounded-r-none" />
-                                                </div>
-                                                {submitCount ? errors.email ? <div className="mt-1 text-danger">{errors.email}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                                {submitCount ? (
+                                                    errors.PlateNumber ? (
+                                                        <div className="mt-1 text-danger">{errors.PlateNumber}</div>
+                                                    ) : (
+                                                        <div className="mt-1 text-success">Looks Good!</div>
+                                                    )
+                                                ) : (
+                                                    ''
+                                                )}
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
-                                            <div className={`md:col-span-2 ${submitCount ? (errors.phoneNumber ? 'has-error' : 'has-success') : ''}`}>
-                                                <label htmlFor="phoneNumber">Telephone</label>
-                                                <Field name="phoneNumber" type="text" id="phoneNumber" placeholder="Enter phone number" className="form-input" />
+                                            <div className={`md:col-span-2 ${submitCount ? (errors.ChasisNumber ? 'has-error' : 'has-success') : ''}`}>
+                                                <label htmlFor="ChasisNumber">Chasis Number</label>
+                                                <Field name="ChasisNumber" type="text" id="ChasisNumber" placeholder="Enter chasis number" className="form-input" />
 
                                                 {submitCount ? (
-                                                    errors.phoneNumber ? (
-                                                        <div className="mt-1 text-danger">{errors.phoneNumber}</div>
+                                                    errors.ChasisNumber ? (
+                                                        <div className="mt-1 text-danger">{errors.ChasisNumber}</div>
                                                     ) : (
                                                         <div className="mt-1 text-success">Looks Good!</div>
                                                     )
@@ -452,14 +464,75 @@ const Client = () => {
                                                     ''
                                                 )}
                                             </div>
+                                            <div className={` ${submitCount ? (errors.VehicleModel ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
+                                                <label htmlFor="VehicleModel">Vehicle Model</label>
+                                                <Field name="VehicleModel" type="text" id="VehicleModel" placeholder="Enter vehicle model" className="form-input" />
 
-                                            <div className={`md:col-span-2 ${submitCount ? (errors.NID ? 'has-error' : 'has-success') : ''}`}>
-                                                <label htmlFor="NID">National ID</label>
-                                                <Field name="NID" type="text" id="NID" placeholder="Enter national ID" className="form-input" />
-                                                {submitCount ? errors.NID ? <div className="mt-1 text-danger">{errors.NID}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                                {submitCount ? (
+                                                    errors.VehicleModel ? (
+                                                        <div className="mt-1 text-danger">{errors.VehicleModel}</div>
+                                                    ) : (
+                                                        <div className="mt-1 text-success">Looks Good!</div>
+                                                    )
+                                                ) : (
+                                                    ''
+                                                )}
                                             </div>
                                         </div>
+                                        <div className={` custom-select grid grid-cols-1 gap-5 md:grid-cols-4`}>
+                                            <div className="md:col-span-2">
+                                                <label htmlFor="manufactureYear" className="">
+                                                    Select Year
+                                                </label>
 
+                                                <Select
+                                                    id="manufactureYear"
+                                                    options={Array.from({ length: 70 }, (_, index) => {
+                                                        const year = new Date().getFullYear() - index;
+                                                        return { value: year, label: year.toString() };
+                                                    })}
+                                                    value={selectedYear ? { value: selectedYear, label: selectedYear.toString() } : null}
+                                                    onChange={(selectedOption) => setSelectedYear(selectedOption?.value ?? '')}
+                                                    placeholder="Select Year"
+                                                    menuPortalTarget={document.body}
+                                                    styles={{
+                                                        menuPortal: (base) => ({
+                                                            ...base,
+                                                            zIndex: 9999,
+                                                        }),
+                                                    }}
+                                                />
+                                                {submitCount ? (
+                                                    errors.ManufactureYear ? (
+                                                        <div className="mt-1 text-danger">{errors.ManufactureYear}</div>
+                                                    ) : (
+                                                        <div className="mt-1 text-success">Looks Good!</div>
+                                                    )
+                                                ) : (
+                                                    ''
+                                                )}
+                                            </div>
+                                            <div className="z-50 md:col-span-2">
+                                                <label htmlFor="userSelect" className="">
+                                                    Select User
+                                                </label>
+
+                                                <Select
+                                                    id="userSelect"
+                                                    options={options}
+                                                    value={selectedUser ? { value: selectedUser, label: options.find((option) => option.value === selectedUser)?.label || '' } : null}
+                                                    onChange={(selectedOption) => setSelectedUser(selectedOption?.value ?? '')}
+                                                    menuPortalTarget={document.body}
+                                                    styles={{
+                                                        menuPortal: (base) => ({
+                                                            ...base,
+                                                            zIndex: 9999,
+                                                        }),
+                                                    }}
+                                                />
+                                                {submitCount ? errors.client ? <div className="mt-1 text-danger">{errors.client}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                            </div>
+                                        </div>
                                         <button type="submit" className="btn btn-primary !mt-6" disabled={loading}>
                                             {loading ? 'Submitting...' : 'Submit Form'}
                                         </button>
@@ -472,28 +545,61 @@ const Client = () => {
             )}
 
             {viewModal && (
-                <Modal title={`${user?.firstName} ${user?.lastName}`} modal={viewModal} setModal={setViewModal}>
+                <Modal title={`${vehicle?.VehicleType}`} modal={viewModal} setModal={setViewModal}>
                     <div className="panel" id="custom_styles">
                         <div className="mb-5 grid grid-cols-3 gap-4">
                             <p className="flex items-center gap-2">
-                                <span className=" font-bold text-white">Email:</span>
+                                <span className=" font-bold dark:text-white">ChasisNumber:</span>
 
-                                {user?.email}
+                                {vehicle?.ChasisNumber}
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className=" font-bold text-white">National ID:</span>
+                                <span className=" font-bold dark:text-white">Plate Number:</span>
 
-                                {user?.NID}
+                                {vehicle?.PlateNumber}
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className=" font-bold text-white">Telephone:</span>
+                                <span className=" font-bold dark:text-white">Manufacturer Year:</span>
 
-                                {user?.phoneNumber}
+                                {vehicle?.ManufactureYear}
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className=" font-bold text-white">CreatedA:</span>
+                                <span className=" font-bold dark:text-white">Vehicle Modal:</span>
+
+                                {vehicle?.VehicleModel}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold dark:text-white">CreatedA:</span>
                                 {/*/@ts-ignore*/}
-                                {format(new Date(user?.createdAt), 'dd/MM/yyyy HH:mm:ss')}
+                                {format(new Date(vehicle?.createdAt), 'dd/MM/yyyy HH:mm:ss')}
+                            </p>
+                        </div>
+                        <div>
+                            <h1 className=" text-3xl font-extrabold">Client Info</h1>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold dark:text-white">Firstname:</span>
+
+                                {vehicle?.client.firstName}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold dark:text-white">Lastname:</span>
+
+                                {vehicle?.client.lastName}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold dark:text-white">Email:</span>
+
+                                {vehicle?.client.email}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold dark:text-white">Telephone:</span>
+
+                                {vehicle?.client.phoneNumber}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold dark:text-white">National ID:</span>
+
+                                {vehicle?.client.NID}
                             </p>
                         </div>
                     </div>

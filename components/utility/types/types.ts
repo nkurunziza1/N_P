@@ -35,4 +35,19 @@ export interface VehicleInterface {
     ChasisNumber: string;
     ManufactureYear: string;
     client: UsersType;
+    createdAt: string;
+}
+
+export type GPSType = {
+    id?: string;
+    serialNumber: string;
+    simcardNumber: string;
+    gpsStatus?: number;
+};
+
+export interface GPS {
+    id: string;
+    serialNumber: string;
+    simcardNumber: string;
+    gpsStatus: number;
 }

@@ -13,6 +13,11 @@ export const vehicleSchema = Yup.object().shape({
     PlateNumber: Yup.string().required('Please fill plate number'),
     VehicleModel: Yup.string().required('Please fill the vehicle model'),
     ChasisNumber: Yup.string().required('Please provide telephone number'),
-    // ManufactureYear: Yup.number().required('Please provide manufacture ID'),
-    // client: Yup.number().required('Please provide client'),
+    // ManufactureYear: Yup.string().required('Please provide manufacture ID'),
+    // client: Yup.string().required('Please provide client'),
+});
+
+export const gpsSchema = Yup.object().shape({
+    serialNumber: Yup.string().required('Please fill the gps serial number'),
+    simcardNumber: Yup.string().required('Please fill the  Gps simcard number'),
 });

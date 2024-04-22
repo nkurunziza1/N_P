@@ -1,1854 +1,366 @@
-import { useEffect, useState } from 'react';
-import CodeHighlight from '../components/Highlight';
+import { DataTable, DataTableSortStatus } from 'mantine-datatable';
+import sortBy from 'lodash/sortBy';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
-import { useDispatch, useSelector } from 'react-redux';
-import { IRootState } from '../store';
-import Dropdown from '../components/Dropdown';
-import { setPageTitle } from '../store/themeConfigSlice';
-import IconCode from '@/components/Icon/IconCode';
-import IconTrashLines from '@/components/Icon/IconTrashLines';
-import IconXCircle from '@/components/Icon/IconXCircle';
+import { useDispatch } from 'react-redux';
 import IconPencil from '@/components/Icon/IconPencil';
-import IconHorizontalDots from '@/components/Icon/IconHorizontalDots';
-import IconCircleCheck from '@/components/Icon/IconCircleCheck';
-import IconSettings from '@/components/Icon/IconSettings';
+import IconTrashLines from '@/components/Icon/IconTrashLines';
+import { setPageTitle } from '@/store/themeConfigSlice';
+import { Button } from '@mantine/core';
+import IconEye from '@/components/Icon/IconEye';
 
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
+import { Field, Form, Formik } from 'formik';
+import { clientSchema, gpsSchema } from '@/components/utility/validation/Validaation';
 
-const Tables = () => {
+import { GPS, GPSType, User, UsersType } from '@/components/utility/types/types';
+import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import Modal from '@/components/model/Model';
+import { handleCreationGps, handleDeleteGps, handleUpdateGps, handlegetAllGps } from '@/components/api/gps';
+
+const Gps = () => {
     const dispatch = useDispatch();
     useEffect(() => {
-        dispatch(setPageTitle('Tables'));
+        dispatch(setPageTitle('Clients'));
     });
-    const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
 
-    const [codeArr, setCodeArr] = useState<string[]>([]);
-    const toggleCode = (name: string) => {
-        if (codeArr.includes(name)) {
-            setCodeArr((value) => value.filter((d) => d !== name));
-        } else {
-            setCodeArr([...codeArr, name]);
-        }
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    });
+
+    const [page, setPage] = useState(1);
+    const PAGE_SIZES = [10, 20, 30, 50, 100];
+    const [data, setData] = useState<GPS[]>([]);
+    const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
+    const [initialRecords, setInitialRecords] = useState(sortBy(data, 'firstName'));
+    const [recordsData, setRecordsData] = useState(initialRecords);
+    const [loadingData, setLoadingData] = useState(true);
+
+    const [search, setSearch] = useState('');
+    const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
+        columnAccessor: 'firstName',
+        direction: 'asc',
+    });
+    const getGps = async () => {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize;
+        const response = await handlegetAllGps(setLoadingData);
+        setData(response);
+        const sortedData = sortBy(response, 'firstName');
+        setInitialRecords(sortedData);
+        setRecordsData([...sortedData.slice(from, to)]);
+        setLoadingData(false);
+    };
+    useEffect(() => {
+        setPage(1);
+    }, [pageSize]);
+
+    useEffect(() => {
+        getGps();
+    }, [page, pageSize]);
+
+    useEffect(() => {
+        setInitialRecords(() => {
+            return data?.filter((item) => {
+                return (
+                    item.serialNumber.toLowerCase().includes(search.toLowerCase()) ||
+                    item.simcardNumber.toLowerCase().includes(search.toLowerCase()) ||
+                    item.gpsStatus.toString().toLowerCase().includes(search.toLowerCase())
+                );
+            });
+        });
+    }, [search]);
+
+    useEffect(() => {
+        const data = sortBy(initialRecords, sortStatus.columnAccessor);
+        setInitialRecords(sortStatus.direction === 'desc' ? data.reverse() : data);
+        setPage(1);
+    }, [sortStatus]);
+
+    const [modal, setModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const showModel = () => {
+        setModal(true);
     };
 
+    const [editGpsData, setEditGpsData] = useState<GPSType>();
+    const [editModal, setIsEditModal] = useState(false);
+    const [viewModal, setViewModal] = useState(false);
+    const [GpsData, setGps] = useState<GPS>();
+
+    const showEditModal = (id: any) => {
+        const Gps = data.find((gps) => gps.id === id);
+        if (Gps) {
+            setEditGpsData(Gps);
+        }
+        setIsEditModal(true);
+    };
+
+    const showGps = (id: any) => {
+        const Gps = data.find((gps) => gps.id === id);
+        if (Gps) {
+            setGps(Gps);
+        }
+        setViewModal(true);
+    };
+
+    const deleteGps = (id: any) => {
+        handleDeleteGps(id);
+        getGps();
+    };
 
     return (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Simple Table</h5>
-                    <button type="button" onClick={() => toggleCode('code1')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
+        <div>
+            <Modal title="Create GPs" modal={modal} setModal={setModal}>
+                <div className="panel" id="custom_styles">
+                    <div className="mb-5">
+                        <Formik
+                            initialValues={{
+                                serialNumber: '',
+                                simcardNumber: '',
+                            }}
+                            validationSchema={gpsSchema}
+                            onSubmit={async (values, { setSubmitting }) => {
+                                try {
+                                    const response = await handleCreationGps(setLoading, values);
+                                    setModal(false);
+                                    getGps();
+                                } catch (error) {
+                                } finally {
+                                    setSubmitting(false);
+                                    setModal(false);
+                                }
+                            }}
+                        >
+                            {({ errors, submitCount, touched, values }) => (
+                                <Form className="space-y-5">
+                                    <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+                                        <div className={`md:col-span-2 ${submitCount ? (errors.serialNumber ? 'has-error' : 'has-success') : ''}`}>
+                                            <label htmlFor="serialNumber">Gps serial number</label>
+                                            <Field name="serialNumber" type="text" id="serialNumber" placeholder="Enter chasis number" className="form-input" />
+
+                                            {submitCount ? (
+                                                errors.serialNumber ? (
+                                                    <div className="mt-1 text-danger">{errors.serialNumber}</div>
+                                                ) : (
+                                                    <div className="mt-1 text-success">Looks Good!</div>
+                                                )
+                                            ) : (
+                                                ''
+                                            )}
+                                        </div>
+                                        <div className={` ${submitCount ? (errors.simcardNumber ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
+                                            <label htmlFor="simcardNumber">Gps simcard number </label>
+                                            <Field name="simcardNumber" type="text" id="simcardNumber" placeholder="Enter vehicle model" className="form-input" />
+
+                                            {submitCount ? (
+                                                errors.simcardNumber ? (
+                                                    <div className="mt-1 text-danger">{errors.simcardNumber}</div>
+                                                ) : (
+                                                    <div className="mt-1 text-success">Looks Good!</div>
+                                                )
+                                            ) : (
+                                                ''
+                                            )}
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="btn btn-primary !mt-6" disabled={loading}>
+                                        {loading ? 'Submitting...' : 'Submit Form'}
+                                    </button>
+                                </Form>
+                            )}
+                        </Formik>
+                    </div>
                 </div>
-                <div className="table-responsive mb-5">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Date</th>
-                                <th>Sale</th>
-                                <th>Status</th>
-                                <th className="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>{data.date}</td>
-                                        <td>{data.sale}</td>
-                                        <td>
-                                            <div
-                                                className={`whitespace-nowrap ${
-                                                    data.status === 'completed'
-                                                        ? 'text-success'
-                                                        : data.status === 'Pending'
-                                                        ? 'text-secondary'
-                                                        : data.status === 'In Progress'
-                                                        ? 'text-info'
-                                                        : data.status === 'Canceled'
-                                                        ? 'text-danger'
-                                                        : 'text-success'
-                                                }`}
-                                            >
-                                                {data.status}
+            </Modal>
+            <div className="panel flex items-center justify-between overflow-x-auto whitespace-nowrap p-3 text-primary">
+                <div className="rounded-full bg-primary p-1.5 text-white ring-2 ring-primary/30 ltr:mr-3 rtl:ml-3">List of Gps</div>
+                <Button className="bg-primary" onClick={showModel}>
+                    Register GPs +
+                </Button>
+            </div>
+            <div className="panel mt-6">
+                <div className="mb-5 flex flex-col gap-5 md:flex-row md:items-center">
+                    <h5 className="text-lg font-semibold uppercase dark:text-white-light"> List of GPS</h5>
+                    <div className="ltr:ml-auto rtl:mr-auto">
+                        <input type="text" className="form-input w-auto" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                    </div>
+                </div>
+                <div className="datatables">
+                    {loadingData ? (
+                        <div>Loading...</div>
+                    ) : (
+                        isMounted && (
+                            <DataTable
+                                className="table-hover whitespace-nowrap"
+                                records={recordsData}
+                                columns={[
+                                    {
+                                        accessor: 'serialNumber',
+                                        title: 'Serial Number',
+                                        sortable: true,
+                                    },
+                                    { accessor: 'simcardNumber', title: 'Gps simcard No. ', sortable: true },
+
+                                    {
+                                        accessor: 'gpsStatus',
+                                        title: 'Status',
+                                        sortable: true,
+                                        render: ({ gpsStatus }) => (
+                                            <div className={` ${gpsStatus === 1 ? 'text-success' : 'text-danger'} flex w-max items-center`}>
+                                                <div>{gpsStatus === 1 ? 'Active' : 'InActive'}</div>
                                             </div>
-                                        </td>
-                                        <td className="text-center">
-                                            <Tippy content="Delete">
-                                                <button type="button">
-                                                    <IconTrashLines className="m-auto" />
-                                                </button>
-                                            </Tippy>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-                {codeArr.includes('code1') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Date</th>
-                <th>Sale</th>
-                <th>Status</th>
-                <th className="text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>{data.date}</td>
-                        <td>{data.sale}</td>
-                        <td>
-                            <div
-                                className={\`whitespace-nowrap \${
-                                    data.status === 'completed'
-                                        ? 'text-success'
-                                        : data.status === 'Pending'
-                                        ? 'text-secondary'
-                                        : data.status === 'In Progress'
-                                        ? 'text-info'
-                                        : data.status === 'Canceled'
-                                        ? 'text-danger'
-                                        : 'text-success'
-                                }\`}
-                            >
-                                {data.status}
-                            </div>
-                        </td>
-                        <td className="text-center">
-                            <Tippy content="Delete">
-                                <button type="button">
-                                    <svg>...</svg>
-                                </button>
-                            </Tippy>
-                        </td>
-                    </tr>
-                );
-            })}
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
-
-            {/* Hover Table  */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Hover Table</h5>
-                    <button type="button" onClick={() => toggleCode('code2')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table className="table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Date</th>
-                                <th>Sale</th>
-                                <th>Status</th>
-                                <th className="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>{data.date}</td>
-                                        <td>{data.sale}</td>
-                                        <td>
-                                            <div
-                                                className={`whitespace-nowrap ${
-                                                    data.status === 'completed'
-                                                        ? 'text-success'
-                                                        : data.status === 'Pending'
-                                                        ? 'text-secondary'
-                                                        : data.status === 'In Progress'
-                                                        ? 'text-info'
-                                                        : data.status === 'Canceled'
-                                                        ? 'text-danger'
-                                                        : 'text-success'
-                                                }`}
-                                            >
-                                                {data.status}
+                                        ),
+                                    },
+                                    {
+                                        accessor: 'createdAt',
+                                        title: 'CreatedAt.',
+                                        sortable: true,
+                                        render: ({ createdAt }) => (
+                                            <div className="flex w-max items-center">
+                                                {/*/@ts-ignore*/}
+                                                <div> {format(new Date(createdAt), 'dd/MM/yyyy HH:mm:ss')}</div>
                                             </div>
-                                        </td>
-                                        <td className="text-center">
-                                            <Tippy content="Delete">
-                                                <button type="button">
-                                                    <IconTrashLines className="m-auto" />
-                                                </button>
-                                            </Tippy>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-                {codeArr.includes('code2') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table className="table-hover">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Date</th>
-                <th>Sale</th>
-                <th>Status</th>
-                <th className="text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>{data.date}</td>
-                        <td>{data.sale}</td>
-                        <td>
-                            <div
-                                className={\`whitespace-nowrap \${
-                                    data.status === 'completed'
-                                        ? 'text-success'
-                                        : data.status === 'Pending'
-                                        ? 'text-secondary'
-                                        : data.status === 'In Progress'
-                                        ? 'text-info'
-                                        : data.status === 'Canceled'
-                                        ? 'text-danger'
-                                        : 'text-success'
-                                }\`}
-                            >
-                                {data.status}
-                            </div>
-                        </td>
-                        <td className="text-center">
-                            <Tippy content="Delete">
-                                <button type="button">
-                                    <svg>...</svg>
-                                </button>
-                            </Tippy>
-                        </td>
-                    </tr>
-                );
-            })}
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
-
-            {/* stripped Table  */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Striped Table</h5>
-                    <button type="button" onClick={() => toggleCode('code3')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table className="table-striped">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Date</th>
-                                <th>Sale</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>{data.date}</td>
-                                        <td>{data.sale}</td>
-                                        <td className="text-center">
-                                            <Tippy content="Delete">
-                                                <button type="button">
-                                                    <IconTrashLines className="m-auto" />
-                                                </button>
-                                            </Tippy>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-                {codeArr.includes('code3') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table className="table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Date</th>
-                <th>Sale</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>{data.date}</td>
-                        <td>{data.sale}</td>
-                        <td className="text-center">
-                            <Tippy content="Delete">
-                                <button type="button">
-                                    <svg>...</svg>
-                                </button>
-                            </Tippy>
-                        </td>
-                    </tr>
-                );
-            })}
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
-
-            {/* light Table  */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Table Light</h5>
-                    <button type="button" onClick={() => toggleCode('code4')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table className="table-hover">
-                        <thead>
-                            <tr className="!bg-transparent dark:!bg-transparent">
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Created At</th>
-                                <th className="text-center"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>{data.id}</td>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>{data.email}</td>
-                                        <td>{data.date}</td>
-                                        <td className="text-center">
-                                            <Tippy content="Delete">
-                                                <button type="button">
-                                                    <IconXCircle className="m-auto" />
-                                                </button>
-                                            </Tippy>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-                {codeArr.includes('code4') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table className="table-hover">
-        <thead>
-            <tr className="!bg-transparent dark:!bg-transparent">
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Created At</th>
-                <th className="text-center"></th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>{data.id}</td>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>{data.email}</td>
-                        <td>{data.date}</td>
-                        <td className="text-center">
-                            <Tippy content="Delete">
-                                <button type="button">
-                                    <svg>...</svg>
-                                </button>
-                            </Tippy>
-                        </td>
-                    </tr>
-                );
-            })}
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
-
-            {/* captions */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Captions</h5>
-                    <button type="button" onClick={() => toggleCode('code5')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                                <th className="text-center">Register</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>{data.id}</td>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>{data.email}</td>
-                                        <td>
-                                            <span
-                                                className={`badge whitespace-nowrap ${
-                                                    data.status === 'completed'
-                                                        ? 'badge-outline-primary'
-                                                        : data.status === 'Pending'
-                                                        ? 'badge-outline-secondary'
-                                                        : data.status === 'In Progress'
-                                                        ? 'badge-outline-info'
-                                                        : data.status === 'Canceled'
-                                                        ? 'badge-outline-danger'
-                                                        : 'badge-outline-primary'
-                                                }`}
-                                            >
-                                                {data.status}
-                                            </span>
-                                        </td>
-                                        <td className="text-center">{data.register}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-                {codeArr.includes('code5') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th className="text-center">Register</th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>{data.id}</td>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>{data.email}</td>
-                        <td>
-                            <span
-                                className={\`badge whitespace-nowrap \${
-                                    data.status === 'completed'
-                                        ? 'badge-outline-primary'
-                                        : data.status === 'Pending'
-                                        ? 'badge-outline-secondary'
-                                        : data.status === 'In Progress'
-                                        ? 'badge-outline-info'
-                                        : data.status === 'Canceled'
-                                        ? 'badge-outline-danger'
-                                        : 'badge-outline-primary'
-                                }\`}
-                            >
-                                {data.status}
-                            </span>
-                        </td>
-                        <td className="text-center">{data.register}</td>
-                    </tr>
-                );
-            })}
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
-
-            {/* progress */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Progress Table</h5>
-                    <button type="button" onClick={() => toggleCode('code6')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Progress</th>
-                                <th>Sales</th>
-                                <th className="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>{data.id}</td>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>
-                                            <div className="flex h-1.5 w-full rounded-full bg-[#ebedf2] dark:bg-dark/40">
-                                                <div
-                                                    className={`h-1.5 rounded-full rounded-bl-full text-center text-xs text-white ${
-                                                        data.status === 'completed'
-                                                            ? 'bg-success'
-                                                            : data.status === 'Pending'
-                                                            ? 'bg-secondary'
-                                                            : data.status === 'In Progress'
-                                                            ? 'bg-info'
-                                                            : data.status === 'Canceled'
-                                                            ? 'bg-danger'
-                                                            : 'bg-success'
-                                                    }`}
-                                                    style={{ width: `${data.progress}` }}
-                                                ></div>
+                                        ),
+                                    },
+                                    {
+                                        accessor: 'action',
+                                        title: 'Action',
+                                        titleClassName: '!text-center',
+                                        render: ({ id }) => (
+                                            <div className="mx-auto flex w-max items-center gap-2">
+                                                <Tippy content="Edit">
+                                                    <div className="cursor-pointer" onClick={() => showEditModal(id)}>
+                                                        <IconPencil />
+                                                    </div>
+                                                </Tippy>
+                                                <Tippy content="View">
+                                                    <div className="cursor-pointer" onClick={() => showGps(id)}>
+                                                        <IconEye />
+                                                    </div>
+                                                </Tippy>
+                                                <Tippy content="Delete">
+                                                    <div className="cursor-pointer" onClick={() => deleteGps(id)}>
+                                                        <IconTrashLines />
+                                                    </div>
+                                                </Tippy>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <div
-                                                className={`whitespace-nowrap ${
-                                                    data.status === 'completed'
-                                                        ? 'text-success'
-                                                        : data.status === 'Pending'
-                                                        ? 'text-secondary'
-                                                        : data.status === 'In Progress'
-                                                        ? 'text-info'
-                                                        : data.status === 'Canceled'
-                                                        ? 'text-danger'
-                                                        : 'text-success'
-                                                }`}
-                                            >
-                                                {data.progress}
-                                            </div>
-                                        </td>
-                                        <td className="border-b border-[#ebedf2] p-3 text-center dark:border-[#191e3a]">
-                                            <Tippy content="Edit">
-                                                <button type="button">
-                                                    <IconPencil className="ltr:mr-2 rtl:ml-2" />
-                                                </button>
-                                            </Tippy>
-                                            <Tippy content="Delete">
-                                                <button type="button">
-                                                    <IconTrashLines />
-                                                </button>
-                                            </Tippy>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                        ),
+                                    },
+                                ]}
+                                totalRecords={initialRecords.length}
+                                recordsPerPage={pageSize}
+                                page={page}
+                                onPageChange={(p) => setPage(p)}
+                                recordsPerPageOptions={PAGE_SIZES}
+                                onRecordsPerPageChange={setPageSize}
+                                sortStatus={sortStatus}
+                                onSortStatusChange={setSortStatus}
+                                minHeight={200}
+                                paginationText={({ from, to, totalRecords }) => `Showing  ${from} to ${to} of ${totalRecords} entries`}
+                            />
+                        )
+                    )}
                 </div>
-                {codeArr.includes('code6') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Progress</th>
-                <th>Sales</th>
-                <th className="text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>{data.id}</td>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>
-                            <div className="h-1.5 bg-[#ebedf2] dark:bg-dark/40 rounded-full flex w-full">
-                                <div
-                                    className={\`h-1.5 rounded-full rounded-bl-full text-center text-white text-xs \${
-                                        data.status === 'completed'
-                                            ? 'bg-success'
-                                            : data.status === 'Pending'
-                                            ? 'bg-secondary'
-                                            : data.status === 'In Progress'
-                                            ? 'bg-info'
-                                            : data.status === 'Canceled'
-                                            ? 'bg-danger'
-                                            : 'bg-success'
-                                    }\`}
-                                    style={{ width: \`\${data.progress}\` }}
-                                ></div>
-                            </div>
-                        </td>
-                        <td>
-                            <div
-                                className={\`whitespace-nowrap \${
-                                    data.status === 'completed'
-                                        ? 'text-success'
-                                        : data.status === 'Pending'
-                                        ? 'text-secondary'
-                                        : data.status === 'In Progress'
-                                        ? 'text-info'
-                                        : data.status === 'Canceled'
-                                        ? 'text-danger'
-                                        : 'text-success'
-                                }\`}
-                            >
-                                {data.progress}
-                            </div>
-                        </td>
-                        <td className="p-3 border-b border-[#ebedf2] dark:border-[#191e3a] text-center">
-                            <Tippy content="Edit">
-                                <button type="button">
-                                    <svg>...</svg>
-                                </button>
-                            </Tippy>
-                            <Tippy content="Delete">
-                                <button type="button">
-                                    <svg>...</svg>
-                                </button>
-                            </Tippy>
-                        </td>
-                    </tr>
-                );
-            })}
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
             </div>
 
-            {/* Contextual */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Contextual</h5>
-                    <button type="button" onClick={() => toggleCode('code7')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Email</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr className="border-dark-dark-light bg-dark-dark-light">
-                                <td>1</td>
-                                <td>John</td>
-                                <td>Doe</td>
-                                <td>johndoe@yahoo.com</td>
-                            </tr>
-                            <tr className="border-primary/20 bg-primary/20">
-                                <td>2</td>
-                                <td>Andy</td>
-                                <td>King</td>
-                                <td>andyking@gmail.com</td>
-                            </tr>
-                            <tr className="border-secondary/20 bg-secondary/20">
-                                <td>3</td>
-                                <td>Lisa</td>
-                                <td>Doe</td>
-                                <td>lisadoe@yahoo.com</td>
-                            </tr>
-                            <tr className="border-success/20 bg-success/20">
-                                <td>4</td>
-                                <td>Vincent</td>
-                                <td>Carpenter</td>
-                                <td>vinnyc@yahoo.com</td>
-                            </tr>
-                            <tr className="border-dark-dark-light bg-dark-dark-light">
-                                <td>5</td>
-                                <td>Amy</td>
-                                <td>Diaz</td>
-                                <td>amydiaz@yahoo.com</td>
-                            </tr>
-                            <tr className="border-danger/20 bg-danger/20">
-                                <td>6</td>
-                                <td>Nia</td>
-                                <td>Hillyer</td>
-                                <td>niahill@gmail.com</td>
-                            </tr>
-                            <tr className="border-info/20 bg-info/20">
-                                <td>7</td>
-                                <td>Marry</td>
-                                <td>McDonald</td>
-                                <td>marryMcD@yahoo.com</td>
-                            </tr>
-                            <tr className="border-warning/20 bg-warning/20">
-                                <td>8</td>
-                                <td>Shaun</td>
-                                <td>Park</td>
-                                <td>park@yahoo.com</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                {codeArr.includes('code7') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Email</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr className="bg-dark-dark-light border-dark-dark-light">
-                <td>1</td>
-                <td>John</td>
-                <td>Doe</td>
-                <td>johndoe@yahoo.com</td>
-            </tr>
-            <tr className="bg-primary/20 border-primary/20">
-                <td>2</td>
-                <td>Andy</td>
-                <td>King</td>
-                <td>andyking@gmail.com</td>
-            </tr>
-            <tr className="bg-secondary/20 border-secondary/20">
-                <td>3</td>
-                <td>Lisa</td>
-                <td>Doe</td>
-                <td>lisadoe@yahoo.com</td>
-            </tr>
-            <tr className="bg-success/20 border-success/20">
-                <td>4</td>
-                <td>Vincent</td>
-                <td>Carpenter</td>
-                <td>vinnyc@yahoo.com</td>
-            </tr>
-            <tr className="bg-dark-dark-light border-dark-dark-light">
-                <td>5</td>
-                <td>Amy</td>
-                <td>Diaz</td>
-                <td>amydiaz@yahoo.com</td>
-            </tr>
-            <tr className="bg-danger/20 border-danger/20">
-                <td>6</td>
-                <td>Nia</td>
-                <td>Hillyer</td>
-                <td>niahill@gmail.com</td>
-            </tr>
-            <tr className="bg-info/20 border-info/20">
-                <td>7</td>
-                <td>Marry</td>
-                <td>McDonald</td>
-                <td>marryMcD@yahoo.com</td>
-            </tr>
-            <tr className="bg-warning/20 border-warning/20">
-                <td>8</td>
-                <td>Shaun</td>
-                <td>Park</td>
-                <td>park@yahoo.com</td>
-            </tr>
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
-
-            {/* dropdown */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Dropdown</h5>
-                    <button type="button" onClick={() => toggleCode('code8')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Date</th>
-                                <th>Sale</th>
-                                <th>Status</th>
-                                <th className="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>{data.date}</td>
-                                        <td>{data.sale}</td>
-                                        <td>
-                                            <span
-                                                className={`badge whitespace-nowrap ${
-                                                    data.status === 'completed'
-                                                        ? 'bg-primary   '
-                                                        : data.status === 'Pending'
-                                                        ? 'bg-secondary'
-                                                        : data.status === 'In Progress'
-                                                        ? 'bg-success'
-                                                        : data.status === 'Canceled'
-                                                        ? 'bg-danger'
-                                                        : 'bg-primary'
-                                                }`}
-                                            >
-                                                {data.status}
-                                            </span>
-                                        </td>
-                                        <td className="text-center">
-                                            <div className="dropdown">
-                                                <Dropdown
-                                                    offset={[0, 5]}
-                                                    placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-                                                    button={<IconHorizontalDots className="opacity-70 m-auto" />}
-                                                >
-                                                    <ul>
-                                                        <li>
-                                                            <button type="button">Download</button>
-                                                        </li>
-                                                        <li>
-                                                            <button type="button">Share</button>
-                                                        </li>
-                                                        <li>
-                                                            <button type="button">Edit</button>
-                                                        </li>
-                                                        <li>
-                                                            <button type="button">Delete</button>
-                                                        </li>
-                                                    </ul>
-                                                </Dropdown>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-                {codeArr.includes('code8') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`import Dropdown from '../components/Dropdown';
-
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Date</th>
-                <th>Sale</th>
-                <th>Status</th>
-                <th className="text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>{data.date}</td>
-                        <td>{data.sale}</td>
-                        <td>
-                            <span
-                                className={\`badge whitespace-nowrap \${
-                                    data.status === 'completed'
-                                        ? 'bg-primary   '
-                                        : data.status === 'Pending'
-                                        ? 'bg-secondary'
-                                        : data.status === 'In Progress'
-                                        ? 'bg-success'
-                                        : data.status === 'Canceled'
-                                        ? 'bg-danger'
-                                        : 'bg-primary'
-                                }\`}
-                            >
-                                {data.status}
-                            </span>
-                        </td>
-                        <td className="text-center">
-                            <div className="dropdown">
-                                <Dropdown
-                                    offset={[0, 5]}
-                                    placement={\`\${isRtl ? 'bottom-start' : 'bottom-end'}\`}
-                                    button={
-                                        <svg className="opacity-70 m-auto w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle cx="5" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" />
-                                            <circle opacity="0.5" cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" />
-                                            <circle cx="19" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" />
-                                        </svg>
+            {editModal && (
+                <Modal title="Edit User" modal={editModal} setModal={setIsEditModal}>
+                    <div className="panel" id="custom_styles">
+                        <div className="mb-5">
+                            <Formik
+                                initialValues={{
+                                    serialNumber: editGpsData?.serialNumber || '',
+                                    simcardNumber: editGpsData?.simcardNumber || '',
+                                }}
+                                validationSchema={gpsSchema}
+                                onSubmit={async (values, { setSubmitting }) => {
+                                    try {
+                                        const response = await handleUpdateGps(setLoading, values, editGpsData?.id);
+                                        setIsEditModal(false);
+                                        getGps();
+                                    } catch (error) {
+                                        console.log('error', error);
+                                    } finally {
+                                        setSubmitting(false);
+                                        setIsEditModal(false);
                                     }
-                                >
-                                    <ul>
-                                        <li>
-                                            <button type="button">Download</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Share</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Edit</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Delete</button>
-                                        </li>
-                                    </ul>
-                                </Dropdown>
-                            </div>
-                        </td>
-                    </tr>
-                );
-            })}
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
+                                }}
+                            >
+                                {({ errors, submitCount, touched, values }) => (
+                                    <Form className="space-y-5">
+                                        <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+                                            <div className={`md:col-span-2 ${submitCount ? (errors.serialNumber ? 'has-error' : 'has-success') : ''}`}>
+                                                <label htmlFor="serialNumber">Gps serial number</label>
+                                                <Field name="serialNumber" type="text" id="serialNumber" placeholder="Enter chasis number" className="form-input" />
 
-            {/* footer Table  */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Table with Footer</h5>
-                    <button type="button" onClick={() => toggleCode('code9')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Office</th>
-                                <th className="!text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>{data.position}</td>
-                                        <td>{data.office}</td>
-                                        <td className="text-center">
-                                            <ul className="flex items-center justify-center gap-2">
-                                                <li>
-                                                    <Tippy content="Edit">
-                                                        <button type="button">
-                                                            <IconCircleCheck className="w-5 h-5 text-primary" />
-                                                        </button>
-                                                    </Tippy>
-                                                </li>
-                                                <li>
-                                                    <Tippy content="Delete">
-                                                        <button type="button">
-                                                            <IconXCircle className="text-danger" />
-                                                        </button>
-                                                    </Tippy>
-                                                </li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Office</th>
-                                <th className="!text-center">Action</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                {codeArr.includes('code9') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
+                                                {submitCount ? (
+                                                    errors.serialNumber ? (
+                                                        <div className="mt-1 text-danger">{errors.serialNumber}</div>
+                                                    ) : (
+                                                        <div className="mt-1 text-success">Looks Good!</div>
+                                                    )
+                                                ) : (
+                                                    ''
+                                                )}
+                                            </div>
+                                            <div className={` ${submitCount ? (errors.simcardNumber ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
+                                                <label htmlFor="simcardNumber">Gps simcard number </label>
+                                                <Field name="simcardNumber" type="text" id="simcardNumber" placeholder="Enter vehicle model" className="form-input" />
 
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
-
-<div className="table-responsive mb-5">
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Office</th>
-                <th className="!text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>{data.position}</td>
-                        <td>{data.office}</td>
-                        <td className="text-center">
-                            <ul className="flex items-center justify-center gap-2">
-                                <li>
-                                    <Tippy content="Edit">
-                                        <button type="button">
-                                            <svg>...</svg>
+                                                {submitCount ? (
+                                                    errors.simcardNumber ? (
+                                                        <div className="mt-1 text-danger">{errors.simcardNumber}</div>
+                                                    ) : (
+                                                        <div className="mt-1 text-success">Looks Good!</div>
+                                                    )
+                                                ) : (
+                                                    ''
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button type="submit" className="btn btn-primary !mt-6" disabled={loading}>
+                                            {loading ? 'Submitting...' : 'Submit Form'}
                                         </button>
-                                    </Tippy>
-                                </li>
-                                <li>
-                                    <Tippy content="Delete">
-                                        <button type="button">
-                                            <svg>...</svg>
-                                        </button>
-                                    </Tippy>
-                                </li>
-                            </ul>
-                        </td>
-                    </tr>
-                );
-            })}
-        </tbody>
-        <tfoot>
-            <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Office</th>
-                <th className="!text-center">Action</th>
-            </tr>
-        </tfoot>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
+                                    </Form>
+                                )}
+                            </Formik>
+                        </div>
+                    </div>
+                </Modal>
+            )}
 
-            {/* checkboxes */}
-            <div className="panel">
-                <div className="mb-5 flex items-center justify-between">
-                    <h5 className="text-lg font-semibold dark:text-white-light">Checkboxes</h5>
-                    <button type="button" onClick={() => toggleCode('code10')} className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600">
-                        <span className="flex items-center">
-                            <IconCode className="me-2" />
-                            Code
-                        </span>
-                    </button>
-                </div>
-                <div className="table-responsive mb-5">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>
-                                    <input type="checkbox" className="form-checkbox" />
-                                </th>
-                                <th>Name</th>
-                                <th>Date</th>
-                                <th>Sale</th>
-                                <th className="!text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableData.map((data) => {
-                                return (
-                                    <tr key={data.id}>
-                                        <td>
-                                            <input type="checkbox" className="form-checkbox" />
-                                        </td>
-                                        <td>
-                                            <div className="whitespace-nowrap">{data.name}</div>
-                                        </td>
-                                        <td>{data.date}</td>
-                                        <td>{data.sale}</td>
-                                        <td className="text-center">
-                                            <ul className="flex items-center justify-center gap-2">
-                                                <li>
-                                                    <Tippy content="Settings">
-                                                        <button type="button">
-                                                            <IconSettings className="w-5 h-5 text-primary" />
-                                                        </button>
-                                                    </Tippy>
-                                                </li>
-                                                <li>
-                                                    <Tippy content="Edit">
-                                                        <button type="button">
-                                                            <IconPencil className="text-success" />
-                                                        </button>
-                                                    </Tippy>
-                                                </li>
-                                                <li>
-                                                    <Tippy content="Delete">
-                                                        <button type="button">
-                                                            <IconTrashLines className="text-danger" />
-                                                        </button>
-                                                    </Tippy>
-                                                </li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-                {codeArr.includes('code10') && (
-                    <CodeHighlight>
-                        <pre className="language-typescript">
-                            {`import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
+            {viewModal && (
+                <Modal title={`${GpsData?.serialNumber}`} modal={viewModal} setModal={setViewModal}>
+                    <div className="panel" id="custom_styles">
+                        <div className="mb-5 grid grid-cols-3 gap-4">
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold dark:text-white">Serial Number:</span>
+                                {GpsData?.serialNumber}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold dark:text-white"> Simcard Number</span>
 
-const tableData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'johndoe@yahoo.com',
-        date: '10/08/2020',
-        sale: 120,
-        status: 'Complete',
-        register: '5 min ago',
-        progress: '40%',
-        position: 'Developer',
-        office: 'London',
-    },
-    {
-        id: 2,
-        name: 'Shaun Park',
-        email: 'shaunpark@gmail.com',
-        date: '11/08/2020',
-        sale: 400,
-        status: 'Pending',
-        register: '11 min ago',
-        progress: '23%',
-        position: 'Designer',
-        office: 'New York',
-    },
-    {
-        id: 3,
-        name: 'Alma Clarke',
-        email: 'alma@gmail.com',
-        date: '12/02/2020',
-        sale: 310,
-        status: 'In Progress',
-        register: '1 hour ago',
-        progress: '80%',
-        position: 'Accountant',
-        office: 'Amazon',
-    },
-    {
-        id: 4,
-        name: 'Vincent Carpenter',
-        email: 'vincent@gmail.com',
-        date: '13/08/2020',
-        sale: 100,
-        status: 'Canceled',
-        register: '1 day ago',
-        progress: '60%',
-        position: 'Data Scientist',
-        office: 'Canada',
-    },
-];
+                                {GpsData?.simcardNumber}
+                            </p>
+                            <p className={`${GpsData?.gpsStatus === 1 ? 'text-success' : 'text-danger'} flex items-center gap-2 `}>
+                                <span className=" font-bold text-black dark:text-white">GPS Status:</span>
 
-<div className="table-responsive mb-5">
-    <table>
-        <thead>
-            <tr>
-                <th>
-                    <input type="checkbox" className="form-checkbox" />
-                </th>
-                <th>Name</th>
-                <th>Date</th>
-                <th>Sale</th>
-                <th className="!text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {tableData.map((data) => {
-                return (
-                    <tr key={data.id}>
-                        <td>
-                            <input type="checkbox" className="form-checkbox" />
-                        </td>
-                        <td>
-                            <div className="whitespace-nowrap">{data.name}</div>
-                        </td>
-                        <td>{data.date}</td>
-                        <td>{data.sale}</td>
-                        <td className="text-center">
-                            <ul className="flex items-center justify-center gap-2">
-                                <li>
-                                    <Tippy content="Settings">
-                                        <button type="button" >
-                                            <svg>...</svg>
-                                        </button>
-                                    </Tippy>
-                                </li>
-                                <li>
-                                    <Tippy content="Edit">
-                                        <button type="button" >
-                                            <svg>...</svg>
-                                        </button>
-                                    </Tippy>
-                                </li>
-                                <li>
-                                    <Tippy content="Delete">
-                                        <button type="button" >
-                                            <svg>...</svg>
-                                        </button>
-                                    </Tippy>
-                                </li>
-                            </ul>
-                        </td>
-                    </tr>
-                );
-            })}
-        </tbody>
-    </table>
-</div>`}
-                        </pre>
-                    </CodeHighlight>
-                )}
-            </div>
+                                {GpsData?.gpsStatus === 0 ? 'InActive' : 'Active'}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold  dark:text-white">CreatedA:</span>
+                                {/*/@ts-ignore*/}
+                                {format(new Date(GpsData?.createdAt), 'dd/MM/yyyy HH:mm:ss')}
+                            </p>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };
 
-export default Tables;
+export default Gps;

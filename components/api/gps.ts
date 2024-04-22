@@ -1,26 +1,23 @@
 import axios from 'axios';
 
 import Swal from 'sweetalert2';
-import { VehicleType } from '../utility/types/types';
+import { GPSType } from '../utility/types/types';
 
-export const handleGetVehicle = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
+export const handlegetAllGps = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
+    setLoadingData(true);
     const token = localStorage.getItem('token');
 
-    setLoadingData(true);
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/getAll`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/gps/getAll`, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
-
         setLoadingData(false);
-        console.log('vehicle', response.data.data);
         return response.data.data.content;
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to get Vehicles ! ',
             text: error.response?.data.message,
             position: 'top',
             showConfirmButton: false,
@@ -31,21 +28,18 @@ export const handleGetVehicle = async (setLoadingData: React.Dispatch<React.SetS
     }
 };
 
-export const handleCreatVehicle = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: VehicleType) => {
+export const handleCreationGps = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: GPSType) => {
     const token = localStorage.getItem('token');
 
     setLoading(true);
-    console.log('data', data);
     try {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/create`, data, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/gps/create`, data, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
-
         Swal.fire({
             icon: 'success',
-            title: 'successfully',
             text: response?.data.message,
             toast: true,
             position: 'top',
@@ -53,13 +47,12 @@ export const handleCreatVehicle = async (setLoading: React.Dispatch<React.SetSta
             timer: 3000,
             padding: '10px 20px',
         });
+
         setLoading(false);
     } catch (error: any) {
-        console.log('error', error);
         Swal.fire({
             icon: 'error',
-            title: 'Form submission failed',
-            text: error.response.data.message,
+            text: error.response?.data.message,
             position: 'top',
             showConfirmButton: false,
             timer: 3000,
@@ -70,18 +63,16 @@ export const handleCreatVehicle = async (setLoading: React.Dispatch<React.SetSta
     }
 };
 
-export const handleDeleteVehicle = async (id: any) => {
+export const handleDeleteGps = async (id: any) => {
     const token = localStorage.getItem('token');
     try {
-        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/delete/${id}`, {
+        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/gps/delete/${id}`, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
-
         Swal.fire({
             icon: 'success',
-
             text: response.data.message,
             toast: true,
             position: 'top',
@@ -89,12 +80,10 @@ export const handleDeleteVehicle = async (id: any) => {
             timer: 3000,
             padding: '10px 20px',
         });
-        return response.data;
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to delete user ! ',
-            text: error.response.data.message,
+            text: error.response?.data.message,
             position: 'top',
             showConfirmButton: false,
             timer: 3000,
@@ -103,11 +92,11 @@ export const handleDeleteVehicle = async (id: any) => {
     }
 };
 
-export const handleUpdateVehicle = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: VehicleType, id: any) => {
+export const handleUpdateGps = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: GPSType, id: any) => {
     const token = localStorage.getItem('token');
     setLoading(true);
     try {
-        const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/update/${id}`, data, {
+        const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/gps/update/${id}`, data, {
             headers: {
                 'x-auth': `${token}`,
             },
