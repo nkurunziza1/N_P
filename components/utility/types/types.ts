@@ -50,4 +50,26 @@ export interface GPS {
     serialNumber: string;
     simcardNumber: string;
     gpsStatus: number;
+    createdAt: string;
 }
+
+export type SubscriptionType = {
+    id?: string;
+    createdAt: string;
+    expiredAt: string;
+    vehicle: VehicleInterface;
+    gps: GPSType;
+};
+
+export interface SubscriptionEnterface {
+    id?: string;
+    expiredAt: string;
+    createdAt: string;
+    vehicle: VehicleInterface;
+    gps: string;
+}
+
+export type loginFormData = {
+    email: string;
+    password: string;
+};

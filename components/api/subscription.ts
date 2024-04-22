@@ -1,19 +1,19 @@
 import axios from 'axios';
-
+import { SubscriptionType } from '../utility/types/types';
 import Swal from 'sweetalert2';
-import { GPSType } from '../utility/types/types';
 
-export const handlegetAllGps = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
+export const handlegetAllSubscription = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
     setLoadingData(true);
     const token = localStorage.getItem('token');
 
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/gps/getAll`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/subscription/getAll`, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
         setLoadingData(false);
+        console.log('data', response.data.data.content);
         return response.data.data.content;
     } catch (error: any) {
         Swal.fire({
@@ -28,12 +28,12 @@ export const handlegetAllGps = async (setLoadingData: React.Dispatch<React.SetSt
     }
 };
 
-export const handleCreationGps = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: GPSType) => {
+export const handleCreationSubscription = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: SubscriptionType) => {
     const token = localStorage.getItem('token');
 
     setLoading(true);
     try {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/gps/create`, data, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/subscription/create`, data, {
             headers: {
                 'x-auth': `${token}`,
             },
@@ -47,7 +47,6 @@ export const handleCreationGps = async (setLoading: React.Dispatch<React.SetStat
             timer: 3000,
             padding: '10px 20px',
         });
-
         setLoading(false);
     } catch (error: any) {
         Swal.fire({
@@ -58,108 +57,70 @@ export const handleCreationGps = async (setLoading: React.Dispatch<React.SetStat
             timer: 3000,
             padding: '10px 20px',
         });
-
         setLoading(false);
     }
 };
 
-export const handleDeleteGps = async (id: any) => {
+export const handleDeleteSubscription = async (id: any) => {
     const token = localStorage.getItem('token');
     try {
-        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/gps/delete/${id}`, {
+        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/subscription/delete/${id}`, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
+
         Swal.fire({
             icon: 'success',
-            text: response.data.message,
+            text: response?.data.message,
             toast: true,
             position: 'top',
             showConfirmButton: false,
             timer: 3000,
             padding: '10px 20px',
         });
-        return response.data;
-    } catch (error: any) {
-        Swal.fire({
-            icon: 'error',
-            text: error.response?.data.message,
-            position: 'top',
-            showConfirmButton: false,
-            timer: 3000,
-            padding: '10px 20px',
-        });
-    }
-};
-
-export const handleUpdateGps = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: GPSType, id: any) => {
-    const token = localStorage.getItem('token');
-    setLoading(true);
-    try {
-        const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/gps/update/${id}`, data, {
-            headers: {
-                'x-auth': `${token}`,
-            },
-        });
-        setLoading(false);
-        Swal.fire({
-            icon: 'success',
-            title: 'Form submit  successfully',
-            toast: true,
-            position: 'top',
-            showConfirmButton: false,
-            timer: 3000,
-            padding: '10px 20px',
-        });
-        console.log('data', response.data);
-        return response.data;
     } catch (error: any) {
         console.log('error', error);
-
-        setLoading(false);
-
         Swal.fire({
             icon: 'error',
-            title: 'Form submission failed',
-            text: error.response.data.message,
+            text: error.response?.data.message,
             position: 'top',
             showConfirmButton: false,
             timer: 3000,
             padding: '10px 20px',
         });
-
-        return error.response.data.message;
     }
 };
 
-export const handleView = async (id: any) => {
+export const handleUpdateSubscription = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, id: any, data: SubscriptionType) => {
     const token = localStorage.getItem('token');
+
+    setLoading(true);
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/getOne/${id}`, {
+        const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/subscription/update/${id}`, data, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
         Swal.fire({
             icon: 'success',
-            title: '  delete user  successfully',
+            text: response?.data.message,
             toast: true,
             position: 'top',
             showConfirmButton: false,
             timer: 3000,
             padding: '10px 20px',
         });
-        return response.data;
+        setLoading(false);
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to delete user ! ',
-            text: error.response.data.message,
+            text: error.response?.data.message,
             position: 'top',
             showConfirmButton: false,
             timer: 3000,
             padding: '10px 20px',
         });
+        setLoading(false);
     }
 };
