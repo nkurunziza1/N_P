@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { UsersType } from '../utility/types/types';
+import Swal from 'sweetalert2';
 
 export const handlegetAllUsers = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
     setLoadingData(true);
@@ -26,8 +27,6 @@ export const handlegetAllUsers = async (setLoadingData: React.Dispatch<React.Set
         });
     }
 };
-
-import Swal from 'sweetalert2';
 
 export const handleCreation = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: UsersType) => {
     const token = localStorage.getItem('token');

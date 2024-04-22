@@ -24,7 +24,7 @@ export type VehicleType = {
     VehicleModel: string;
     ChasisNumber: string;
     ManufactureYear: string;
-    client: number | UsersType;
+    client: number | UsersType | string;
 };
 
 export interface VehicleInterface {

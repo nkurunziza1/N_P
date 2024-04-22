@@ -91,15 +91,6 @@ const Client = () => {
     const [viewModal, setViewModal] = useState(false);
     const [vehicle, setVehicle] = useState<VehicleInterface>();
 
-    const options4 = [
-        { value: 'orange', label: 'Orange' },
-        { value: 'white', label: 'White' },
-        { value: 'purple', label: 'Purple' },
-        { value: 'puple', label: 'Puple' },
-        { value: 'prple', label: 'Prple' },
-        { value: 'purpl', label: 'Purpl' },
-    ];
-
     const showEditModal = (id: any) => {
         const vehicle = data.find((vehicle) => vehicle.id === id);
         if (vehicle) {
@@ -133,12 +124,15 @@ const Client = () => {
 
     useEffect(() => {
         getUser();
-    });
+    }, []);
 
-    const options = users?.map((user) => ({
-        value: user.id,
-        label: `${user.firstName} ${user.lastName}`,
-    }));
+    const options =
+        users
+            ?.filter((user) => user.id !== undefined)
+            .map((user) => ({
+                value: user.id!.toString(),
+                label: `${user.firstName} ${user.lastName}`,
+            })) || [];
 
     return (
         <div>
@@ -157,6 +151,8 @@ const Client = () => {
                             validationSchema={vehicleSchema}
                             onSubmit={async (values, { setSubmitting }) => {
                                 try {
+                                    values.ManufactureYear = selectedYear;
+                                    values.client = selectedUser;
                                     console.log(values);
                                     const response = await handleCreatVehicle(setLoading, values);
                                     setModal(false);
@@ -187,7 +183,7 @@ const Client = () => {
                                         </div>
 
                                         <div className={`${submitCount ? (errors.PlateNumber ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
-                                            <label htmlFor="PlateNumber">Last Name </label>
+                                            <label htmlFor="PlateNumber">Plate Number </label>
                                             <Field name="PlateNumber" type="text" id="PlateNumber" placeholder="Enter plate number" className="form-input" />
 
                                             {submitCount ? (
@@ -203,7 +199,7 @@ const Client = () => {
                                     </div>
                                     <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
                                         <div className={`md:col-span-2 ${submitCount ? (errors.ChasisNumber ? 'has-error' : 'has-success') : ''}`}>
-                                            <label htmlFor="ChasisNumber">Telephone</label>
+                                            <label htmlFor="ChasisNumber">Chasis Number</label>
                                             <Field name="ChasisNumber" type="text" id="ChasisNumber" placeholder="Enter chasis number" className="form-input" />
 
                                             {submitCount ? (
@@ -233,7 +229,7 @@ const Client = () => {
                                     </div>
                                     <div className={` custom-select grid grid-cols-1 gap-5 md:grid-cols-4`}>
                                         <div className="md:col-span-2">
-                                            <label htmlFor="manufactureYear" className="text-white">
+                                            <label htmlFor="manufactureYear" className="">
                                                 Select Year
                                             </label>
 
@@ -244,7 +240,7 @@ const Client = () => {
                                                     return { value: year, label: year.toString() };
                                                 })}
                                                 value={selectedYear ? { value: selectedYear, label: selectedYear.toString() } : null}
-                                                onChange={(selectedOption) => setSelectedYear(selectedOption.value)}
+                                                onChange={(selectedOption) => setSelectedYear(selectedOption?.value ?? '')}
                                                 placeholder="Select Year"
                                             />
                                             {submitCount ? (
@@ -258,15 +254,15 @@ const Client = () => {
                                             )}
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label htmlFor="userSelect" className="text-white">
+                                            <label htmlFor="userSelect" className="">
                                                 Select User
                                             </label>
 
                                             <Select
                                                 id="userSelect"
                                                 options={options}
-                                                value={selectedUser ? { value: selectedUser, label: selectedUser } : null}
-                                                onChange={(selectedOption) => setSelectedUser(selectedOption.value)}
+                                                value={selectedUser ? { value: selectedUser, label: options.find((option) => option.value === selectedUser)?.label || '' } : null}
+                                                onChange={(selectedOption) => setSelectedUser(selectedOption?.value ?? '')}
                                                 placeholder="Select User"
                                             />
                                             {submitCount ? errors.VehicleModel ? <div className="mt-1 text-danger">{errors.client}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}

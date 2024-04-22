@@ -12,8 +12,7 @@ export const vehicleSchema = Yup.object().shape({
     VehicleType: Yup.string().required('Please fill the Vehicle Type'),
     PlateNumber: Yup.string().required('Please fill plate number'),
     VehicleModel: Yup.string().required('Please fill the vehicle model'),
-    email: Yup.string().email().required('please enter an email'),
     ChasisNumber: Yup.string().required('Please provide telephone number'),
-    ManufactureYear: Yup.string().required('Please provide manufacture ID'),
-    client: Yup.string().required('Please provide client'),
+    // ManufactureYear: Yup.number().required('Please provide manufacture ID'),
+    // client: Yup.number().required('Please provide client'),
 });

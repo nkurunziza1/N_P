@@ -35,17 +35,18 @@ export const handleCreatVehicle = async (setLoading: React.Dispatch<React.SetSta
     const token = localStorage.getItem('token');
 
     setLoading(true);
+    console.log('data', data);
     try {
         const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/create`, data, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
-        console.log('data', data);
+
         Swal.fire({
             icon: 'success',
             title: 'successfully',
-            text: response?.data,
+            text: response?.data.message,
             toast: true,
             position: 'top',
             showConfirmButton: false,
