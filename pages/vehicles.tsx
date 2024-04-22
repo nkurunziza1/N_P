@@ -1,1669 +1,510 @@
+import { DataTable, DataTableSortStatus } from 'mantine-datatable';
+import sortBy from 'lodash/sortBy';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
+import { useDispatch } from 'react-redux';
+import IconPencil from '@/components/Icon/IconPencil';
+import IconTrashLines from '@/components/Icon/IconTrashLines';
+import { setPageTitle } from '@/store/themeConfigSlice';
+import { Button } from '@mantine/core';
+import IconEye from '@/components/Icon/IconEye';
+import { Field, Form, Formik } from 'formik';
+import { vehicleSchema } from '@/components/utility/validation/Validaation';
+import { UsersType, VehicleInterface, VehicleType } from '@/components/utility/types/types';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import CodeHighlight from '../components/Highlight';
-import { useDispatch, useSelector } from 'react-redux';
-import { IRootState } from '../store';
-import { setPageTitle } from '../store/themeConfigSlice';
-import dynamic from 'next/dynamic';
-import IconBell from '@/components/Icon/IconBell';
-import IconCode from '@/components/Icon/IconCode';
-const ReactApexChart = dynamic(() => import('react-apexcharts'), {
-    ssr: false,
-});
-
-const Vehicles = () => {
+import { format } from 'date-fns';
+import Modal from '@/components/model/Model';
+import { handleCreatVehicle, handleDeleteVehicle, handleGetVehicle } from '@/components/api/vehicle';
+import Select from 'react-select';
+import { handlegetAllUsers } from '@/components/api/client';
+const Client = () => {
     const dispatch = useDispatch();
     useEffect(() => {
-        dispatch(setPageTitle('Vehicles'));
+        dispatch(setPageTitle('Clients'));
     });
-    const [codeArr, setCodeArr] = useState<string[]>([]);
-
-    const toggleCode = (name: string) => {
-        if (codeArr.includes(name)) {
-            setCodeArr((value) => value.filter((d) => d !== name));
-        } else {
-            setCodeArr([...codeArr, name]);
-        }
-    };
-
-    const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
-    const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
 
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => {
         setIsMounted(true);
     });
 
-    // lineChartOptions
-    const lineChart: any = {
-        series: [
-            {
-                name: 'Sales',
-                data: [45, 55, 75, 25, 45, 110],
-            },
-        ],
-        options: {
-            chart: {
-                height: 300,
-                type: 'line',
-                toolbar: false,
-            },
-            colors: ['#4361EE'],
-            tooltip: {
-                marker: false,
-                y: {
-                    formatter(number: number) {
-                        return '$' + number;
-                    },
-                },
-            },
-            stroke: {
-                width: 2,
-                curve: 'smooth',
-            },
-            xaxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June'],
-                axisBorder: {
-                    color: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-            yaxis: {
-                opposite: isRtl ? true : false,
-                labels: {
-                    offsetX: isRtl ? -20 : 0,
-                },
-            },
-            grid: {
-                borderColor: isDark ? '#191e3a' : '#e0e6ed',
-            },
-        },
+    const [page, setPage] = useState(1);
+    const PAGE_SIZES = [10, 20, 30, 50, 100];
+    const [data, setData] = useState<VehicleInterface[]>([]);
+    const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
+    const [initialRecords, setInitialRecords] = useState(sortBy(data, 'firstName'));
+    const [recordsData, setRecordsData] = useState(initialRecords);
+    const [loadingData, setLoadingData] = useState(true);
+
+    const [search, setSearch] = useState('');
+    const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
+        columnAccessor: 'firstName',
+        direction: 'asc',
+    });
+    const getVehicle = async () => {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize;
+        const response = await handleGetVehicle(setLoadingData);
+        setData(response);
+        const sortedData = sortBy(response, 'plateNumber');
+        setInitialRecords(sortedData);
+        setRecordsData([...sortedData.slice(from, to)]);
+        setLoading(false);
+    };
+    useEffect(() => {
+        setPage(1);
+    }, [pageSize]);
+
+    useEffect(() => {
+        getVehicle();
+    }, [page, pageSize]);
+
+    useEffect(() => {
+        setInitialRecords(() => {
+            return data?.filter((item) => {
+                return (
+                    item.VehicleType.toLowerCase().includes(search.toLowerCase()) ||
+                    item.PlateNumber.toLowerCase().includes(search.toLowerCase()) ||
+                    item.VehicleModel.toString().toLowerCase().includes(search.toLowerCase()) ||
+                    item.ChasisNumber.toLowerCase().includes(search.toLowerCase()) ||
+                    item.client.firstName.toLowerCase().includes(search.toLowerCase())
+                );
+            });
+        });
+    }, [search]);
+
+    useEffect(() => {
+        const data = sortBy(initialRecords, sortStatus.columnAccessor);
+        setInitialRecords(sortStatus.direction === 'desc' ? data.reverse() : data);
+        setPage(1);
+    }, [sortStatus]);
+
+    const [modal, setModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const showModel = () => {
+        setModal(true);
     };
 
-    // areaChartOptions
-    const areaChart: any = {
-        series: [
-            {
-                name: 'Income',
-                data: [16800, 16800, 15500, 17800, 15500, 17000, 19000, 16000, 15000, 17000, 14000, 17000],
-            },
-        ],
-        options: {
-            chart: {
-                type: 'area',
-                height: 300,
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            colors: ['#805dca'],
-            dataLabels: {
-                enabled: false,
-            },
-            stroke: {
-                width: 2,
-                curve: 'smooth',
-            },
-            xaxis: {
-                axisBorder: {
-                    color: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-            yaxis: {
-                opposite: isRtl ? true : false,
-                labels: {
-                    offsetX: isRtl ? -40 : 0,
-                },
-            },
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            legend: {
-                horizontalAlign: 'left',
-            },
-            grid: {
-                borderColor: isDark ? '#191E3A' : '#E0E6ED',
-            },
-            tooltip: {
-                theme: isDark ? 'dark' : 'light',
-            },
-        },
-    };
+    const [editUserData, setEditUserData] = useState<VehicleType>();
+    const [editModal, setIsEditModal] = useState(false);
+    const [viewModal, setViewModal] = useState(false);
+    const [vehicle, setVehicle] = useState<VehicleInterface>();
 
-    // columnChartOptions
-    const columnChart: any = {
-        series: [
-            {
-                name: 'Net Profit',
-                data: [44, 55, 57, 56, 61, 58, 63, 60, 66],
-            },
-            {
-                name: 'Revenue',
-                data: [76, 85, 101, 98, 87, 105, 91, 114, 94],
-            },
-        ],
-        options: {
-            chart: {
-                height: 300,
-                type: 'bar',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            colors: ['#805dca', '#e7515a'],
-            dataLabels: {
-                enabled: false,
-            },
-            stroke: {
-                show: true,
-                width: 2,
-                colors: ['transparent'],
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                    endingShape: 'rounded',
-                },
-            },
-            grid: {
-                borderColor: isDark ? '#191e3a' : '#e0e6ed',
-            },
-            xaxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-                axisBorder: {
-                    color: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-            yaxis: {
-                opposite: isRtl ? true : false,
-                labels: {
-                    offsetX: isRtl ? -10 : 0,
-                },
-            },
-            tooltip: {
-                theme: isDark ? 'dark' : 'light',
-                y: {
-                    formatter: function (val: any) {
-                        return val;
-                    },
-                },
-            },
-        },
-    };
+    const options4 = [
+        { value: 'orange', label: 'Orange' },
+        { value: 'white', label: 'White' },
+        { value: 'purple', label: 'Purple' },
+        { value: 'puple', label: 'Puple' },
+        { value: 'prple', label: 'Prple' },
+        { value: 'purpl', label: 'Purpl' },
+    ];
 
-    // simpleColumnStackedOptions
-    const simpleColumnStacked: any = {
-        series: [
-            {
-                name: 'PRODUCT A',
-                data: [44, 55, 41, 67, 22, 43],
-            },
-            {
-                name: 'PRODUCT B',
-                data: [13, 23, 20, 8, 13, 27],
-            },
-        ],
-        options: {
-            chart: {
-                height: 300,
-                type: 'bar',
-                stacked: true,
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            colors: ['#2196f3', '#3b3f5c'],
-            responsive: [
-                {
-                    breakpoint: 480,
-                    options: {
-                        legend: {
-                            position: 'bottom',
-                            offsetX: -10,
-                            offsetY: 5,
-                        },
-                    },
-                },
-            ],
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                },
-            },
-            xaxis: {
-                type: 'datetime',
-                categories: ['01/01/2011 GMT', '01/02/2011 GMT', '01/03/2011 GMT', '01/04/2011 GMT', '01/05/2011 GMT', '01/06/2011 GMT'],
-                axisBorder: {
-                    color: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-            yaxis: {
-                opposite: isRtl ? true : false,
-                labels: {
-                    offsetX: isRtl ? -20 : 0,
-                },
-            },
-            grid: {
-                borderColor: isDark ? '#191e3a' : '#e0e6ed',
-            },
-            legend: {
-                position: 'right',
-                offsetY: 40,
-            },
-            tooltip: {
-                theme: isDark ? 'dark' : 'light',
-            },
-            fill: {
-                opacity: 0.8,
-            },
-        },
-    };
-
-    // barChartOptions
-    const barChart: any = {
-        series: [
-            {
-                name: 'Sales',
-                data: [44, 55, 41, 67, 22, 43, 21, 70],
-            },
-        ],
-        options: {
-            chart: {
-                height: 300,
-                type: 'bar',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            dataLabels: {
-                enabled: false,
-            },
-            stroke: {
-                show: true,
-                width: 1,
-            },
-            colors: ['#4361ee'],
-            xaxis: {
-                categories: ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'],
-                axisBorder: {
-                    color: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-            yaxis: {
-                opposite: isRtl ? true : false,
-                reversed: isRtl ? true : false,
-            },
-            grid: {
-                borderColor: isDark ? '#191e3a' : '#e0e6ed',
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: true,
-                },
-            },
-            fill: {
-                opacity: 0.8,
-            },
-        },
-    };
-
-    // mixedChartOptions
-    const mixedChart: any = {
-        series: [
-            {
-                name: 'TEAM A',
-                type: 'column',
-                data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-            },
-            {
-                name: 'TEAM B',
-                type: 'area',
-                data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
-            },
-            {
-                name: 'TEAM C',
-                type: 'line',
-                data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39],
-            },
-        ],
-        options: {
-            chart: {
-                height: 300,
-                // stacked: false,
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            dataLabels: {
-                enabled: false,
-            },
-            colors: ['#2196f3', '#00ab55', '#4361ee'],
-            stroke: {
-                width: [0, 2, 2],
-                curve: 'smooth',
-            },
-            plotOptions: {
-                bar: {
-                    columnWidth: '50%',
-                },
-            },
-            fill: {
-                opacity: [1, 0.25, 1],
-            },
-
-            labels: ['01/01/2022', '02/01/2022', '03/01/2022', '04/01/2022', '05/01/2022', '06/01/2022', '07/01/2022', '08/01/2022', '09/01/2022', '10/01/2022', '11/01/2022'],
-            markers: {
-                size: 0,
-            },
-            xaxis: {
-                type: 'datetime',
-                axisBorder: {
-                    color: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-            yaxis: {
-                title: {
-                    text: 'Points',
-                },
-                min: 0,
-                opposite: isRtl ? true : false,
-                labels: {
-                    offsetX: isRtl ? -10 : 0,
-                },
-            },
-            grid: {
-                borderColor: isDark ? '#191e3a' : '#e0e6ed',
-            },
-            tooltip: {
-                shared: true,
-                intersect: false,
-                theme: isDark ? 'dark' : 'light',
-            },
-            legend: {
-                itemMargin: {
-                    horizontal: 4,
-                    vertical: 8,
-                },
-            },
-        },
-    };
-
-    // radarChartOptions
-    const radarChart: any = {
-        series: [
-            {
-                name: 'Series 1',
-                data: [80, 50, 30, 40, 100, 20],
-            },
-        ],
-        options: {
-            chart: {
-                height: 300,
-                type: 'radar',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            colors: ['#4361ee'],
-            xaxis: {
-                categories: ['January', 'February', 'March', 'April', 'May', 'June'],
-            },
-            plotOptions: {
-                radar: {
-                    polygons: {
-                        strokeColors: isDark ? '#191e3a' : '#e0e6ed',
-                        connectorColors: isDark ? '#191e3a' : '#e0e6ed',
-                    },
-                },
-            },
-            tooltip: {
-                theme: isDark ? 'dark' : 'light',
-            },
-        },
-    };
-
-    // pieChartOptions
-    const pieChart: any = {
-        series: [44, 55, 13, 43, 22],
-        options: {
-            chart: {
-                height: 300,
-                type: 'pie',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
-            colors: ['#4361ee', '#805dca', '#00ab55', '#e7515a', '#e2a03f'],
-            responsive: [
-                {
-                    breakpoint: 480,
-                    options: {
-                        chart: {
-                            width: 200,
-                        },
-                    },
-                },
-            ],
-            stroke: {
-                show: false,
-            },
-            legend: {
-                position: 'bottom',
-            },
-        },
-    };
-
-    // donutChartOptions
-    const donutChart: any = {
-        series: [44, 55, 13],
-        options: {
-            chart: {
-                height: 300,
-                type: 'donut',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            stroke: {
-                show: false,
-            },
-            labels: ['Team A', 'Team B', 'Team C'],
-            colors: ['#4361ee', '#805dca', '#e2a03f'],
-            responsive: [
-                {
-                    breakpoint: 480,
-                    options: {
-                        chart: {
-                            width: 200,
-                        },
-                    },
-                },
-            ],
-            legend: {
-                position: 'bottom',
-            },
-        },
-    };
-
-    // polarAreaChartOptions
-    const polarAreaChart: any = {
-        series: [14, 23, 21, 17, 15, 10, 12, 17, 21],
-        options: {
-            chart: {
-                height: 300,
-                type: 'polarArea',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            colors: ['#4361ee', '#805dca', '#00ab55', '#e7515a', '#e2a03f', '#2196f3', '#3b3f5c'],
-            stroke: {
-                show: false,
-            },
-            responsive: [
-                {
-                    breakpoint: 480,
-                    options: {
-                        chart: {
-                            width: 200,
-                        },
-                    },
-                },
-            ],
-            plotOptions: {
-                polarArea: {
-                    rings: {
-                        strokeColor: isDark ? '#191e3a' : '#e0e6ed',
-                    },
-                    spokes: {
-                        connectorColors: isDark ? '#191e3a' : '#e0e6ed',
-                    },
-                },
-            },
-            legend: {
-                position: 'bottom',
-            },
-            fill: {
-                opacity: 0.85,
-            },
-        },
-    };
-
-    // radialBarChartOptions
-    const radialBarChart: any = {
-        series: [44, 55, 41],
-        options: {
-            chart: {
-                height: 300,
-                type: 'radialBar',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            colors: ['#4361ee', '#805dca', '#e2a03f'],
-            grid: {
-                borderColor: isDark ? '#191e3a' : '#e0e6ed',
-            },
-            plotOptions: {
-                radialBar: {
-                    dataLabels: {
-                        name: {
-                            fontSize: '22px',
-                        },
-                        value: {
-                            fontSize: '16px',
-                        },
-                        total: {
-                            show: true,
-                            label: 'Total',
-                            formatter: function (w: any) {
-                                // By default this function returns the average of all series. The below is just an example to show the use of custom formatter function
-                                return 249;
-                            },
-                        },
-                    },
-                },
-            },
-            labels: ['Apples', 'Oranges', 'Bananas'],
-            fill: {
-                opacity: 0.85,
-            },
-        },
-    };
-
-    // bubble chart data
-    const generateData = (baseval: any, count: any, yrange: any) => {
-        let i = 0;
-        const series = [];
-        while (i < count) {
-            var x = Math.floor(Math.random() * (750 - 1 + 1)) + 1;
-            var y = Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min;
-            var z = Math.floor(Math.random() * (75 - 15 + 1)) + 15;
-
-            series.push([x, y, z]);
-            baseval += 86400000;
-            i++;
+    const showEditModal = (id: any) => {
+        const vehicle = data.find((vehicle) => vehicle.id === id);
+        if (vehicle) {
+            setEditUserData(vehicle);
         }
-        return series;
+        setIsEditModal(true);
     };
 
-    // bubbleChartOptions
-    const bubbleChart: any = {
-        series: [
-            {
-                name: 'Bubble1',
-                data: generateData(new Date('11 Feb 2017 GMT').getTime(), 20, {
-                    min: 10,
-                    max: 60,
-                }),
-            },
-            {
-                name: 'Bubble2',
-                data: generateData(new Date('11 Feb 2017 GMT').getTime(), 20, {
-                    min: 10,
-                    max: 60,
-                }),
-            },
-        ],
-        options: {
-            chart: {
-                height: 300,
-                type: 'bubble',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-            colors: ['#4361ee', '#00ab55'],
-            dataLabels: {
-                enabled: false,
-            },
-            xaxis: {
-                tickAmount: 12,
-                type: 'category',
-                axisBorder: {
-                    color: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-            yaxis: {
-                max: 70,
-                opposite: isRtl ? true : false,
-                labels: {
-                    offsetX: isRtl ? -10 : 0,
-                },
-            },
-            grid: {
-                borderColor: isDark ? '#191e3a' : '#e0e6ed',
-            },
-            tooltip: {
-                theme: isDark ? 'dark' : 'light',
-            },
-            stroke: {
-                colors: isDark ? ['#191e3a'] : ['#e0e6ed'],
-            },
-            fill: {
-                opacity: 0.85,
-            },
-        },
+    const showVehicle = (id: any) => {
+        const vehicle = data.find((vehicle) => vehicle.id === id);
+        if (vehicle) {
+            setVehicle(vehicle);
+        }
+        setViewModal(true);
     };
+
+    const deleteVehicle = async (id: any) => {
+        await handleDeleteVehicle(id);
+        getVehicle();
+    };
+
+    const [selectedUser, setSelectedUser] = useState('');
+    const [selectedYear, setSelectedYear] = useState('');
+    const [users, setUsers] = useState<UsersType[]>();
+    const [loadingUsers, setLoadingUsers] = useState(true);
+
+    const getUser = async () => {
+        const response = await handlegetAllUsers(setLoadingUsers);
+        setUsers(response);
+    };
+
+    useEffect(() => {
+        getUser();
+    });
+
+    const options = users?.map((user) => ({
+        value: user.id,
+        label: `${user.firstName} ${user.lastName}`,
+    }));
 
     return (
         <div>
-            <ul className="mb-6 flex space-x-2 rtl:space-x-reverse">
-                <li>
-                    <Link href="#" className="text-primary hover:underline">
-                        Dashboard
-                    </Link>
-                </li>
-                <li className="before:content-['/'] ltr:before:mr-2 rtl:before:ml-2">
-                    <span>Vehicles</span>
-                </li>
-            </ul>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="panel flex items-center overflow-x-auto whitespace-nowrap p-3 text-primary lg:col-span-2">
-                    <div className="rounded-full bg-primary p-1.5 text-white ring-2 ring-primary/30 ltr:mr-3 rtl:ml-3">
-                        <IconBell />
-                    </div>
-                    <span className="ltr:mr-3 rtl:ml-3">Documentation: </span>
-                    <a href="https://www.npmjs.com/package/react-apexVehicles" target="_blank" className="block hover:underline" rel="noreferrer">
-                        https://www.npmjs.com/package/react-apexVehicles
-                    </a>
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white-light">Simple Line</h5>
-                        <button type="button" className="  " onClick={() => toggleCode('code1')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
+            <Modal title="Create Vehicle" modal={modal} setModal={setModal}>
+                <div className="panel" id="custom_styles">
                     <div className="mb-5">
-                        {isMounted && <ReactApexChart series={lineChart.series} options={lineChart.options} className="rounded-lg bg-white dark:bg-black" type="line" height={300} width={'100%'} />}
+                        <Formik
+                            initialValues={{
+                                VehicleType: '',
+                                PlateNumber: '',
+                                VehicleModel: '',
+                                ChasisNumber: '',
+                                ManufactureYear: '',
+                                client: '',
+                            }}
+                            validationSchema={vehicleSchema}
+                            onSubmit={async (values, { setSubmitting }) => {
+                                try {
+                                    console.log(values);
+                                    const response = await handleCreatVehicle(setLoading, values);
+                                    setModal(false);
+                                    getVehicle();
+                                } catch (error) {
+                                } finally {
+                                    setSubmitting(false);
+                                    setModal(false);
+                                }
+                            }}
+                        >
+                            {({ errors, submitCount, touched, values }) => (
+                                <Form className="space-y-5">
+                                    <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+                                        <div className={`${submitCount ? (errors.VehicleType ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
+                                            <label htmlFor="VehicleType">Vehicle Type </label>
+                                            <Field name="VehicleType" type="text" id="VehicleType" placeholder="Enter vehicle type" className="form-input" />
+
+                                            {submitCount ? (
+                                                errors.VehicleType ? (
+                                                    <div className="mt-1 text-danger">{errors.VehicleType}</div>
+                                                ) : (
+                                                    <div className="mt-1 text-success">Looks Good!</div>
+                                                )
+                                            ) : (
+                                                ''
+                                            )}
+                                        </div>
+
+                                        <div className={`${submitCount ? (errors.PlateNumber ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
+                                            <label htmlFor="PlateNumber">Last Name </label>
+                                            <Field name="PlateNumber" type="text" id="PlateNumber" placeholder="Enter plate number" className="form-input" />
+
+                                            {submitCount ? (
+                                                errors.PlateNumber ? (
+                                                    <div className="mt-1 text-danger">{errors.PlateNumber}</div>
+                                                ) : (
+                                                    <div className="mt-1 text-success">Looks Good!</div>
+                                                )
+                                            ) : (
+                                                ''
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+                                        <div className={`md:col-span-2 ${submitCount ? (errors.ChasisNumber ? 'has-error' : 'has-success') : ''}`}>
+                                            <label htmlFor="ChasisNumber">Telephone</label>
+                                            <Field name="ChasisNumber" type="text" id="ChasisNumber" placeholder="Enter chasis number" className="form-input" />
+
+                                            {submitCount ? (
+                                                errors.ChasisNumber ? (
+                                                    <div className="mt-1 text-danger">{errors.ChasisNumber}</div>
+                                                ) : (
+                                                    <div className="mt-1 text-success">Looks Good!</div>
+                                                )
+                                            ) : (
+                                                ''
+                                            )}
+                                        </div>
+                                        <div className={` ${submitCount ? (errors.VehicleModel ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
+                                            <label htmlFor="VehicleModel">Last Name </label>
+                                            <Field name="VehicleModel" type="text" id="VehicleModel" placeholder="Enter vehicle model" className="form-input" />
+
+                                            {submitCount ? (
+                                                errors.VehicleModel ? (
+                                                    <div className="mt-1 text-danger">{errors.VehicleModel}</div>
+                                                ) : (
+                                                    <div className="mt-1 text-success">Looks Good!</div>
+                                                )
+                                            ) : (
+                                                ''
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className={` custom-select grid grid-cols-1 gap-5 md:grid-cols-4`}>
+                                        <div className="md:col-span-2">
+                                            <label htmlFor="manufactureYear" className="text-white">
+                                                Select Year
+                                            </label>
+
+                                            <Select
+                                                id="manufactureYear"
+                                                options={Array.from({ length: 70 }, (_, index) => {
+                                                    const year = new Date().getFullYear() - index;
+                                                    return { value: year, label: year.toString() };
+                                                })}
+                                                value={selectedYear ? { value: selectedYear, label: selectedYear.toString() } : null}
+                                                onChange={(selectedOption) => setSelectedYear(selectedOption.value)}
+                                                placeholder="Select Year"
+                                            />
+                                            {submitCount ? (
+                                                errors.VehicleModel ? (
+                                                    <div className="mt-1 text-danger">{errors.ManufactureYear}</div>
+                                                ) : (
+                                                    <div className="mt-1 text-success">Looks Good!</div>
+                                                )
+                                            ) : (
+                                                ''
+                                            )}
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label htmlFor="userSelect" className="text-white">
+                                                Select User
+                                            </label>
+
+                                            <Select
+                                                id="userSelect"
+                                                options={options}
+                                                value={selectedUser ? { value: selectedUser, label: selectedUser } : null}
+                                                onChange={(selectedOption) => setSelectedUser(selectedOption.value)}
+                                                placeholder="Select User"
+                                            />
+                                            {submitCount ? errors.VehicleModel ? <div className="mt-1 text-danger">{errors.client}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="btn btn-primary !mt-6" disabled={loading}>
+                                        {loading ? 'Submitting...' : 'Submit Form'}
+                                    </button>
+                                </Form>
+                            )}
+                        </Formik>
                     </div>
-                    {codeArr.includes('code1') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">
-                                {`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={lineChart.series} options={lineChart.options} className="rounded-lg bg-white dark:bg-black" type="line" height={300} width={'100%'} /> }
-
-// lineChartOptions
-const lineChart: any = {
-    series: [
-        {
-            name: 'Sales',
-            data: [45, 55, 75, 25, 45, 110],
-        },
-    ],
-    options: {
-        chart: {
-            height: 300,
-            type: 'line',
-            toolbar: false,
-        },
-        colors: ['#4361EE'],
-        tooltip: {
-            marker: false,
-            y: {
-                formatter(number: number) {
-                    return '$' + number;
-                },
-            },
-        },
-        stroke: {
-            width: 2,
-            curve: 'smooth',
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June'],
-            axisBorder: {
-                color: isDark ? '#191e3a' : '#e0e6ed',
-            },
-        },
-        yaxis: {
-            opposite: isRtl ? true : false,
-            labels: {
-                offsetX: isRtl ? -20 : 0,
-            },
-        },
-        grid: {
-            borderColor: isDark ? '#191e3a' : '#e0e6ed',
-        },
-    },
-};
-`}
-                            </pre>
-                        </CodeHighlight>
-                    )}
                 </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Simple Area</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code2')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
+            </Modal>
+            <div className="panel flex items-center justify-between overflow-x-auto whitespace-nowrap p-3 text-primary">
+                <div className="rounded-full bg-primary p-1.5 text-white ring-2 ring-primary/30 ltr:mr-3 rtl:ml-3">List of Vehicles</div>
+                <Button className="bg-primary" onClick={showModel}>
+                    create vehicle +
+                </Button>
+            </div>
+            <div className="panel mt-6">
+                <div className="mb-5 flex flex-col gap-5 md:flex-row md:items-center">
+                    <h5 className="text-lg font-semibold uppercase dark:text-white-light">List of Vehicles</h5>
+                    <div className="ltr:ml-auto rtl:mr-auto">
+                        <input type="text" className="form-input w-auto" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
                     </div>
-                    <div className="mb-5">
-                        {isMounted && <ReactApexChart series={areaChart.series} options={areaChart.options} className="rounded-lg bg-white dark:bg-black" type="area" height={300} width={'100%'} />}
-                    </div>
-                    {codeArr.includes('code2') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={areaChart.series} options={areaChart.options} className="rounded-lg bg-white dark:bg-black" type="area" height={300} width={'100%'} />}
-
-// areaChartOptions
-const areaChart: any = {
-    series: [
-        {
-            name: 'Income',
-            data: [16800, 16800, 15500, 17800, 15500, 17000, 19000, 16000, 15000, 17000, 14000, 17000],
-        },
-    ],
-    options: {
-        chart: {
-            type: 'area',
-            height: 300,
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        colors: ['#805dca'],
-        dataLabels: {
-            enabled: false,
-        },
-        stroke: {
-            width: 2,
-            curve: 'smooth',
-        },
-        xaxis: {
-            axisBorder: {
-                color: isDark ? '#191e3a' : '#e0e6ed',
-            },
-        },
-        yaxis: {
-            opposite: isRtl ? true : false,
-            labels: {
-                offsetX: isRtl ? -40 : 0,
-            },
-        },
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        legend: {
-            horizontalAlign: 'left',
-        },
-        grid: {
-            borderColor: isDark ? '#191E3A' : '#E0E6ED',
-        },
-        tooltip: {
-            theme: isDark ? 'dark' : 'light',
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
                 </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Simple Column</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code3')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && <ReactApexChart series={columnChart.series} options={columnChart.options} className="rounded-lg bg-white dark:bg-black" type="bar" height={300} width={'100%'} />}
-                    </div>
-                    {codeArr.includes('code3') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={columnChart.series} options={columnChart.options} className="rounded-lg bg-white dark:bg-black" type="bar" height={300} width={'100%'} />}
-
-// columnChartOptions
-const columnChart: any = {
-    series: [
-        {
-            name: 'Net Profit',
-            data: [44, 55, 57, 56, 61, 58, 63, 60, 66],
-        },
-        {
-            name: 'Revenue',
-            data: [76, 85, 101, 98, 87, 105, 91, 114, 94],
-        },
-    ],
-    options: {
-        chart: {
-            height: 300,
-            type: 'bar',
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        colors: ['#805dca', '#e7515a'],
-        dataLabels: {
-            enabled: false,
-        },
-        stroke: {
-            show: true,
-            width: 2,
-            colors: ['transparent'],
-        },
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                columnWidth: '55%',
-                endingShape: 'rounded',
-            },
-        },
-        grid: {
-            borderColor: isDark ? '#191e3a' : '#e0e6ed',
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-            axisBorder: {
-                color: isDark ? '#191e3a' : '#e0e6ed',
-            },
-        },
-        yaxis: {
-            opposite: isRtl ? true : false,
-            labels: {
-                offsetX: isRtl ? -10 : 0,
-            },
-        },
-        tooltip: {
-            theme: isDark ? 'dark' : 'light',
-            y: {
-                formatter: function (val: any) {
-                    return val;
-                },
-            },
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Simple Column Stacked</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code4')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && (
-                            <ReactApexChart
-                                series={simpleColumnStacked.series}
-                                options={simpleColumnStacked.options}
-                                className="rounded-lg bg-white dark:bg-black"
-                                type="bar"
-                                height={300}
-                                width={'100%'}
+                <div className="datatables">
+                    {loadingData ? (
+                        <div>Loading...</div>
+                    ) : (
+                        isMounted && (
+                            <DataTable
+                                className="table-hover whitespace-nowrap"
+                                records={recordsData}
+                                columns={[
+                                    {
+                                        accessor: 'VehicleType',
+                                        title: 'Vehicle Type',
+                                        sortable: true,
+                                    },
+                                    {
+                                        accessor: 'PlateNumber',
+                                        title: 'Plate Number',
+                                        sortable: true,
+                                    },
+                                    { accessor: 'ChasisNumber', title: 'Chasis Number ', sortable: true },
+                                    { accessor: 'ManufactureYear', title: 'Manufacture Year', sortable: true },
+                                    {
+                                        accessor: 'client',
+                                        title: 'Client.',
+                                        sortable: true,
+                                        render: ({ client }) => (
+                                            <div className="flex w-max items-center">
+                                                {/*/@ts-ignore*/}
+                                                <div>{client.firstName}</div>
+                                            </div>
+                                        ),
+                                    },
+                                    {
+                                        accessor: 'createdAt',
+                                        title: 'CreatedAt.',
+                                        sortable: true,
+                                        render: ({ createdAt }) => (
+                                            <div className="flex w-max items-center">
+                                                {/*/@ts-ignore*/}
+                                                <div> {format(new Date(createdAt), 'dd/MM/yyyy HH:mm:ss')}</div>
+                                            </div>
+                                        ),
+                                    },
+                                    {
+                                        accessor: 'action',
+                                        title: 'Action',
+                                        titleClassName: '!text-center',
+                                        render: ({ id }) => (
+                                            <div className="mx-auto flex w-max items-center gap-2">
+                                                <Tippy content="Edit">
+                                                    <div className="cursor-pointer" onClick={() => showEditModal(id)}>
+                                                        <IconPencil />
+                                                    </div>
+                                                </Tippy>
+                                                <Tippy content="View">
+                                                    <div className="cursor-pointer" onClick={() => showVehicle(id)}>
+                                                        <IconEye />
+                                                    </div>
+                                                </Tippy>
+                                                <Tippy content="Delete">
+                                                    <div className="cursor-pointer" onClick={() => deleteVehicle(id)}>
+                                                        <IconTrashLines />
+                                                    </div>
+                                                </Tippy>
+                                            </div>
+                                        ),
+                                    },
+                                ]}
+                                totalRecords={initialRecords.length}
+                                recordsPerPage={pageSize}
+                                page={page}
+                                onPageChange={(p) => setPage(p)}
+                                recordsPerPageOptions={PAGE_SIZES}
+                                onRecordsPerPageChange={setPageSize}
+                                sortStatus={sortStatus}
+                                onSortStatusChange={setSortStatus}
+                                minHeight={200}
+                                paginationText={({ from, to, totalRecords }) => `Showing  ${from} to ${to} of ${totalRecords} entries`}
                             />
-                        )}
-                    </div>
-                    {codeArr.includes('code4') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={simpleColumnStacked.series} options={simpleColumnStacked.options} className="rounded-lg bg-white dark:bg-black" type="bar" height={300} width={'100%'} />}
-
-// simpleColumnStackedOptions
-const simpleColumnStacked: any = {
-    series: [
-        {
-            name: 'PRODUCT A',
-            data: [44, 55, 41, 67, 22, 43],
-        },
-        {
-            name: 'PRODUCT B',
-            data: [13, 23, 20, 8, 13, 27],
-        },
-    ],
-    options: {
-        chart: {
-            height: 300,
-            type: 'bar',
-            stacked: true,
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        colors: ['#2196f3', '#3b3f5c'],
-        responsive: [
-            {
-                breakpoint: 480,
-                options: {
-                    legend: {
-                        position: 'bottom',
-                        offsetX: -10,
-                        offsetY: 5,
-                    },
-                },
-            },
-        ],
-        plotOptions: {
-            bar: {
-                horizontal: false,
-            },
-        },
-        xaxis: {
-            type: 'datetime',
-            categories: ['01/01/2011 GMT', '01/02/2011 GMT', '01/03/2011 GMT', '01/04/2011 GMT', '01/05/2011 GMT', '01/06/2011 GMT'],
-            axisBorder: {
-                color: isDark ? '#191e3a' : '#e0e6ed',
-            },
-        },
-        yaxis: {
-            opposite: isRtl ? true : false,
-            labels: {
-                offsetX: isRtl ? -20 : 0,
-            },
-        },
-        grid: {
-            borderColor: isDark ? '#191e3a' : '#e0e6ed',
-        },
-        legend: {
-            position: 'right',
-            offsetY: 40,
-        },
-        tooltip: {
-            theme: isDark ? 'dark' : 'light',
-        },
-        fill: {
-            opacity: 0.8,
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Simple Bar</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code5')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && <ReactApexChart series={barChart.series} options={barChart.options} className="rounded-lg bg-white dark:bg-black" type="bar" height={300} width={'100%'} />}
-                    </div>
-                    {codeArr.includes('code5') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={barChart.series} options={barChart.options} className="rounded-lg bg-white dark:bg-black" type="bar" height={300} width={'100%'} />}
-
-// barChartOptions
-const barChart: any = {
-    series: [
-        {
-            name: 'Sales',
-            data: [44, 55, 41, 67, 22, 43, 21, 70],
-        },
-    ],
-    options: {
-        chart: {
-            height: 300,
-            type: 'bar',
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        dataLabels: {
-            enabled: false,
-        },
-        stroke: {
-            show: true,
-            width: 1,
-        },
-        colors: ['#4361ee'],
-        xaxis: {
-            categories: ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'],
-            axisBorder: {
-                color: isDark ? '#191e3a' : '#e0e6ed',
-            },
-        },
-        yaxis: {
-            opposite: isRtl ? true : false,
-            reversed: isRtl ? true : false,
-        },
-        grid: {
-            borderColor: isDark ? '#191e3a' : '#e0e6ed',
-        },
-        plotOptions: {
-            bar: {
-                horizontal: true,
-            },
-        },
-        fill: {
-            opacity: 0.8,
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Mixed</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code6')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && <ReactApexChart series={mixedChart.series} options={mixedChart.options} className="rounded-lg bg-white dark:bg-black" type="bar" height={300} width={'100%'} />}
-                    </div>
-                    {codeArr.includes('code6') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={mixedChart.series} options={mixedChart.options} className="rounded-lg bg-white dark:bg-black" type="bar" height={300} width={'100%'} />}
-
-// mixedChartOptions
-const mixedChart: any = {
-    series: [
-        {
-            name: 'TEAM A',
-            type: 'column',
-            data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-        },
-        {
-            name: 'TEAM B',
-            type: 'area',
-            data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
-        },
-        {
-            name: 'TEAM C',
-            type: 'line',
-            data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39],
-        },
-    ],
-    options: {
-        chart: {
-            height: 300,
-            // stacked: false,
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        dataLabels: {
-            enabled: false,
-        },
-        colors: ['#2196f3', '#00ab55', '#4361ee'],
-        stroke: {
-            width: [0, 2, 2],
-            curve: 'smooth',
-        },
-        plotOptions: {
-            bar: {
-                columnWidth: '50%',
-            },
-        },
-        fill: {
-            opacity: [1, 0.25, 1],
-        },
-
-        labels: ['01/01/2022', '02/01/2022', '03/01/2022', '04/01/2022', '05/01/2022', '06/01/2022', '07/01/2022', '08/01/2022', '09/01/2022', '10/01/2022', '11/01/2022'],
-        markers: {
-            size: 0,
-        },
-        xaxis: {
-            type: 'datetime',
-            axisBorder: {
-                color: isDark ? '#191e3a' : '#e0e6ed',
-            },
-        },
-        yaxis: {
-            title: {
-                text: 'Points',
-            },
-            min: 0,
-            opposite: isRtl ? true : false,
-            labels: {
-                offsetX: isRtl ? -10 : 0,
-            },
-        },
-        grid: {
-            borderColor: isDark ? '#191e3a' : '#e0e6ed',
-        },
-        tooltip: {
-            shared: true,
-            intersect: false,
-            theme: isDark ? 'dark' : 'light',
-        },
-        legend: {
-            itemMargin: {
-                horizontal: 4,
-                vertical: 8,
-            },
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Basic Radar</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code7')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && <ReactApexChart series={radarChart.series} options={radarChart.options} className="rounded-lg bg-white dark:bg-black" type="radar" height={300} width={'100%'} />}
-                    </div>
-                    {codeArr.includes('code7') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={radarChart.series} options={radarChart.options} className="rounded-lg bg-white dark:bg-black" type="radar" height={300} width={'100%'} />}
-
-// radarChartOptions
-const radarChart: any = {
-    series: [
-        {
-            name: 'Series 1',
-            data: [80, 50, 30, 40, 100, 20],
-        },
-    ],
-    options: {
-        chart: {
-            height: 300,
-            type: 'radar',
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        colors: ['#4361ee'],
-        xaxis: {
-            categories: ['January', 'February', 'March', 'April', 'May', 'June'],
-        },
-        plotOptions: {
-            radar: {
-                polygons: {
-                    strokeColors: isDark ? '#191e3a' : '#e0e6ed',
-                    connectorColors: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-        },
-        tooltip: {
-            theme: isDark ? 'dark' : 'light',
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Basic Pie</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code8')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && <ReactApexChart series={pieChart.series} options={pieChart.options} className="rounded-lg bg-white dark:bg-black" type="pie" height={300} width={'100%'} />}
-                    </div>
-                    {codeArr.includes('code8') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={pieChart.series} options={pieChart.options} className="rounded-lg bg-white dark:bg-black" type="pie" height={300} width={'100%'} />}
-
-// pieChartOptions
-const pieChart: any = {
-    series: [44, 55, 13, 43, 22],
-    options: {
-        chart: {
-            height: 300,
-            type: 'pie',
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
-        colors: ['#4361ee', '#805dca', '#00ab55', '#e7515a', '#e2a03f'],
-        responsive: [
-            {
-                breakpoint: 480,
-                options: {
-                    chart: {
-                        width: 200,
-                    },
-                },
-            },
-        ],
-        stroke: {
-            show: false,
-        },
-        legend: {
-            position: 'bottom',
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Basic Donut</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code9')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && <ReactApexChart series={donutChart.series} options={donutChart.options} className="rounded-lg bg-white dark:bg-black" type="donut" height={300} width={'100%'} />}
-                    </div>
-                    {codeArr.includes('code9') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={donutChart.series} options={donutChart.options} className="rounded-lg bg-white dark:bg-black" type="donut" height={300} width={'100%'} />}
-
-// donutChartOptions
-const donutChart: any = {
-    series: [44, 55, 13],
-    options: {
-        chart: {
-            height: 300,
-            type: 'donut',
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        stroke: {
-            show: false,
-        },
-        labels: ['Team A', 'Team B', 'Team C'],
-        colors: ['#4361ee', '#805dca', '#e2a03f'],
-        responsive: [
-            {
-                breakpoint: 480,
-                options: {
-                    chart: {
-                        width: 200,
-                    },
-                },
-            },
-        ],
-        legend: {
-            position: 'bottom',
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Basic Polar Area</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code10')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && (
-                            <ReactApexChart
-                                series={polarAreaChart.series}
-                                options={polarAreaChart.options}
-                                className="rounded-lg bg-white dark:bg-black"
-                                type="polarArea"
-                                height={300}
-                                width={'100%'}
-                            />
-                        )}
-                    </div>
-                    {codeArr.includes('code10') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={polarAreaChart.series} options={polarAreaChart.options} className="rounded-lg bg-white dark:bg-black" type="polarArea" height={300} width={'100%'} />}
-
-// polarAreaChartOptions
-const polarAreaChart: any = {
-    series: [14, 23, 21, 17, 15, 10, 12, 17, 21],
-    options: {
-        chart: {
-            height: 300,
-            type: 'polarArea',
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        colors: ['#4361ee', '#805dca', '#00ab55', '#e7515a', '#e2a03f', '#2196f3', '#3b3f5c'],
-        stroke: {
-            show: false,
-        },
-        responsive: [
-            {
-                breakpoint: 480,
-                options: {
-                    chart: {
-                        width: 200,
-                    },
-                },
-            },
-        ],
-        plotOptions: {
-            polarArea: {
-                rings: {
-                    strokeColor: isDark ? '#191e3a' : '#e0e6ed',
-                },
-                spokes: {
-                    connectorColors: isDark ? '#191e3a' : '#e0e6ed',
-                },
-            },
-        },
-        legend: {
-            position: 'bottom',
-        },
-        fill: {
-            opacity: 0.85,
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Radial Bar</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code11')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && (
-                            <ReactApexChart
-                                series={radialBarChart.series}
-                                options={radialBarChart.options}
-                                className="rounded-lg bg-white dark:bg-black"
-                                type="radialBar"
-                                height={300}
-                                width={'100%'}
-                            />
-                        )}
-                    </div>
-                    {codeArr.includes('code11') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={radialBarChart.series} options={radialBarChart.options} className="rounded-lg bg-white dark:bg-black" type="radialBar" height={300} width={'100%'} />}
-
-// radialBarChartOptions
-const radialBarChart: any = {
-    series: [44, 55, 41],
-    options: {
-        chart: {
-            height: 300,
-            type: 'radialBar',
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        colors: ['#4361ee', '#805dca', '#e2a03f'],
-        grid: {
-            borderColor: isDark ? '#191e3a' : '#e0e6ed',
-        },
-        plotOptions: {
-            radialBar: {
-                dataLabels: {
-                    name: {
-                        fontSize: '22px',
-                    },
-                    value: {
-                        fontSize: '16px',
-                    },
-                    total: {
-                        show: true,
-                        label: 'Total',
-                        formatter: function (w: any) {
-                            // By default this function returns the average of all series. The below is just an example to show the use of custom formatter function
-                            return 249;
-                        },
-                    },
-                },
-            },
-        },
-        labels: ['Apples', 'Oranges', 'Bananas'],
-        fill: {
-            opacity: 0.85,
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
-                    )}
-                </div>
-
-                <div className="panel">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h5 className="text-lg font-semibold dark:text-white">Bubble Chart</h5>
-                        <button type="button" className="font-semibold hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-600" onClick={() => toggleCode('code12')}>
-                            <span className="flex items-center">
-                                <IconCode className="me-2" />{' '}
-                                Code
-                            </span>
-                        </button>
-                    </div>
-                    <div className="mb-5">
-                        {isMounted && (
-                            <ReactApexChart series={bubbleChart.series} options={bubbleChart.options} className="rounded-lg bg-white dark:bg-black" type="bubble" height={300} width={'100%'} />
-                        )}
-                    </div>
-                    {codeArr.includes('code12') && (
-                        <CodeHighlight>
-                            <pre className="language-typescript">{`import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexVehicles'), {
-    ssr: false,
-});
-
-{isMounted && <ReactApexChart series={bubbleChart.series} options={bubbleChart.options} className="rounded-lg bg-white dark:bg-black" type="bubble" height={300} width={'100%'} />}
-
-// bubbleChartOptions
-const bubbleChart: any = {
-    series: [
-        {
-            name: 'Bubble1',
-            data: generateData(new Date('11 Feb 2017 GMT').getTime(), 20, {
-                min: 10,
-                max: 60,
-            }),
-        },
-        {
-            name: 'Bubble2',
-            data: generateData(new Date('11 Feb 2017 GMT').getTime(), 20, {
-                min: 10,
-                max: 60,
-            }),
-        },
-    ],
-    options: {
-        chart: {
-            height: 300,
-            type: 'bubble',
-            zoom: {
-                enabled: false,
-            },
-            toolbar: {
-                show: false,
-            },
-        },
-        colors: ['#4361ee', '#00ab55'],
-        dataLabels: {
-            enabled: false,
-        },
-        xaxis: {
-            tickAmount: 12,
-            type: 'category',
-            axisBorder: {
-                color: isDark ? '#191e3a' : '#e0e6ed',
-            },
-        },
-        yaxis: {
-            max: 70,
-            opposite: isRtl ? true : false,
-            labels: {
-                offsetX: isRtl ? -10 : 0,
-            },
-        },
-        grid: {
-            borderColor: isDark ? '#191e3a' : '#e0e6ed',
-        },
-        tooltip: {
-            theme: isDark ? 'dark' : 'light',
-        },
-        stroke: {
-            colors: isDark ? ['#191e3a'] : ['#e0e6ed'],
-        },
-        fill: {
-            opacity: 0.85,
-        },
-    },
-};`}</pre>
-                        </CodeHighlight>
+                        )
                     )}
                 </div>
             </div>
+
+            {editModal && (
+                <Modal title="Edit Vehicle" modal={editModal} setModal={setIsEditModal}>
+                    <div className="panel" id="custom_styles">
+                        <div className="mb-5">
+                            <Formik
+                                initialValues={{
+                                    firstName: editUserData?.firstName || '',
+                                    lastName: editUserData?.lastName || '',
+                                    email: editUserData?.email || '',
+                                    phoneNumber: editUserData?.phoneNumber || '',
+                                    NID: editUserData?.NID || '',
+                                }}
+                                validationSchema={clientSchema}
+                                onSubmit={async (values, { setSubmitting }) => {
+                                    try {
+                                        console.log('editUserData', values);
+                                        const response = await handleUpdateUser(setLoading, values, editUserData?.id);
+                                        setIsEditModal(false);
+                                        getUser();
+                                    } catch (error) {
+                                        console.log('error', error);
+                                    } finally {
+                                        setSubmitting(false);
+                                        setIsEditModal(false);
+                                    }
+                                }}
+                            >
+                                {({ errors, submitCount, touched, values }) => (
+                                    <Form className="space-y-5">
+                                        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                                            <div className={submitCount ? (errors.firstName ? 'has-error' : 'has-success') : ''}>
+                                                <label htmlFor="firstName">First Name </label>
+                                                <Field name="firstName" type="text" id="firstName" placeholder="Enter First Name" className="form-input" />
+
+                                                {submitCount ? (
+                                                    errors.firstName ? (
+                                                        <div className="mt-1 text-danger">{errors.firstName}</div>
+                                                    ) : (
+                                                        <div className="mt-1 text-success">Looks Good!</div>
+                                                    )
+                                                ) : (
+                                                    ''
+                                                )}
+                                            </div>
+
+                                            <div className={submitCount ? (errors.lastName ? 'has-error' : 'has-success') : ''}>
+                                                <label htmlFor="lastName">Last Name </label>
+                                                <Field name="lastName" type="text" id="lastName" placeholder="Enter Last Name" className="form-input" />
+
+                                                {submitCount ? errors.lastName ? <div className="mt-1 text-danger">{errors.lastName}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                            </div>
+
+                                            <div className={submitCount ? (errors.email ? 'has-error' : 'has-success') : ''}>
+                                                <label htmlFor="email">Email</label>
+                                                <div className="flex">
+                                                    <div className="flex items-center justify-center border border-white-light bg-[#eee] px-3 font-semibold ltr:rounded-l-md ltr:border-r-0 rtl:rounded-r-md rtl:border-l-0 dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                                                        @
+                                                    </div>
+                                                    <Field name="email" type="text" id="email" placeholder="Enter email" className="form-input ltr:rounded-l-none rtl:rounded-r-none" />
+                                                </div>
+                                                {submitCount ? errors.email ? <div className="mt-1 text-danger">{errors.email}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+                                            <div className={`md:col-span-2 ${submitCount ? (errors.phoneNumber ? 'has-error' : 'has-success') : ''}`}>
+                                                <label htmlFor="phoneNumber">Telephone</label>
+                                                <Field name="phoneNumber" type="text" id="phoneNumber" placeholder="Enter phone number" className="form-input" />
+
+                                                {submitCount ? (
+                                                    errors.phoneNumber ? (
+                                                        <div className="mt-1 text-danger">{errors.phoneNumber}</div>
+                                                    ) : (
+                                                        <div className="mt-1 text-success">Looks Good!</div>
+                                                    )
+                                                ) : (
+                                                    ''
+                                                )}
+                                            </div>
+
+                                            <div className={`md:col-span-2 ${submitCount ? (errors.NID ? 'has-error' : 'has-success') : ''}`}>
+                                                <label htmlFor="NID">National ID</label>
+                                                <Field name="NID" type="text" id="NID" placeholder="Enter national ID" className="form-input" />
+                                                {submitCount ? errors.NID ? <div className="mt-1 text-danger">{errors.NID}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" className="btn btn-primary !mt-6" disabled={loading}>
+                                            {loading ? 'Submitting...' : 'Submit Form'}
+                                        </button>
+                                    </Form>
+                                )}
+                            </Formik>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
+            {viewModal && (
+                <Modal title={`${user?.firstName} ${user?.lastName}`} modal={viewModal} setModal={setViewModal}>
+                    <div className="panel" id="custom_styles">
+                        <div className="mb-5 grid grid-cols-3 gap-4">
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold text-white">Email:</span>
+
+                                {user?.email}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold text-white">National ID:</span>
+
+                                {user?.NID}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold text-white">Telephone:</span>
+
+                                {user?.phoneNumber}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <span className=" font-bold text-white">CreatedA:</span>
+                                {/*/@ts-ignore*/}
+                                {format(new Date(user?.createdAt), 'dd/MM/yyyy HH:mm:ss')}
+                            </p>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };
 
-export default Vehicles;
+export default Client;

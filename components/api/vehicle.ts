@@ -1,60 +1,61 @@
 import axios from 'axios';
-import { UsersType } from '../utility/types/types';
 
-export const handlegetAllUsers = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
-    setLoadingData(true);
+import Swal from 'sweetalert2';
+import { VehicleType } from '../utility/types/types';
+
+export const handleGetVehicle = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
     const token = localStorage.getItem('token');
 
+    setLoadingData(true);
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/getAll`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/getAll`, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
+
         setLoadingData(false);
-        return response.data.data;
+        console.log('vehicle', response.data.data);
+        return response.data.data.content;
     } catch (error: any) {
-        setLoadingData(false);
         Swal.fire({
             icon: 'error',
-            title: 'failed to get users ! ',
+            title: 'failed to Vehicles ! ',
             text: error.response?.data.message,
             position: 'top',
             showConfirmButton: false,
             timer: 3000,
             padding: '10px 20px',
         });
+        setLoadingData(false);
     }
 };
 
-import Swal from 'sweetalert2';
-
-export const handleCreation = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: UsersType) => {
+export const handleCreatVehicle = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: VehicleType) => {
     const token = localStorage.getItem('token');
+
     setLoading(true);
     try {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/create`, data, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/create`, data, {
             headers: {
                 'x-auth': `${token}`,
             },
         });
-        setLoading(false);
+        console.log('data', data);
         Swal.fire({
             icon: 'success',
-            title: 'Form submit  successfully',
+            title: 'successfully',
+            text: response?.data,
             toast: true,
             position: 'top',
             showConfirmButton: false,
             timer: 3000,
             padding: '10px 20px',
         });
-
-        return response.data;
+        setLoading(false);
+        handleGetVehicle(setLoading);
     } catch (error: any) {
         console.log('error', error);
-
-        setLoading(false);
-
         Swal.fire({
             icon: 'error',
             title: 'Form submission failed',
@@ -65,15 +66,48 @@ export const handleCreation = async (setLoading: React.Dispatch<React.SetStateAc
             padding: '10px 20px',
         });
 
-        return error.response.data.message;
+        setLoading(false);
     }
 };
 
-export const handleUpdateUser = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: UsersType, id: any) => {
+export const handleDeleteVehicle = async (id: any) => {
+    const token = localStorage.getItem('token');
+    try {
+        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/delete/${id}`, {
+            headers: {
+                'x-auth': `${token}`,
+            },
+        });
+
+        Swal.fire({
+            icon: 'success',
+            title: '  delete  successfully',
+            text: response.data.message,
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+            padding: '10px 20px',
+        });
+        return response.data;
+    } catch (error: any) {
+        Swal.fire({
+            icon: 'error',
+            title: 'failed to delete user ! ',
+            text: error.response.data.message,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+            padding: '10px 20px',
+        });
+    }
+};
+
+export const handleUpdateVehicle = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: VehicleType, id: any) => {
     const token = localStorage.getItem('token');
     setLoading(true);
     try {
-        const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/client/update/${id}`, data, {
+        const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/update/${id}`, data, {
             headers: {
                 'x-auth': `${token}`,
             },
@@ -112,38 +146,7 @@ export const handleUpdateUser = async (setLoading: React.Dispatch<React.SetState
 export const handleView = async (id: any) => {
     const token = localStorage.getItem('token');
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/profile/${id}`, {
-            headers: {
-                'x-auth': `${token}`,
-            },
-        });
-        Swal.fire({
-            icon: 'success',
-            title: '  delete user  successfully',
-            toast: true,
-            position: 'top',
-            showConfirmButton: false,
-            timer: 3000,
-            padding: '10px 20px',
-        });
-        return response.data;
-    } catch (error: any) {
-        Swal.fire({
-            icon: 'error',
-            title: 'failed to delete user ! ',
-            text: error.response.data.message,
-            position: 'top',
-            showConfirmButton: false,
-            timer: 3000,
-            padding: '10px 20px',
-        });
-    }
-};
-
-export const handleDelete = async (id: any) => {
-    const token = localStorage.getItem('token');
-    try {
-        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/client/delete/${id}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/getOne/${id}`, {
             headers: {
                 'x-auth': `${token}`,
             },

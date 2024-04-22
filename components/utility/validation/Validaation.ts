@@ -6,5 +6,14 @@ export const clientSchema = Yup.object().shape({
     email: Yup.string().email().required('please enter an email'),
     phoneNumber: Yup.string().required('Please provide telephone number'),
     NID: Yup.string().required('Please provide National ID'),
+});
 
+export const vehicleSchema = Yup.object().shape({
+    VehicleType: Yup.string().required('Please fill the Vehicle Type'),
+    PlateNumber: Yup.string().required('Please fill plate number'),
+    VehicleModel: Yup.string().required('Please fill the vehicle model'),
+    email: Yup.string().email().required('please enter an email'),
+    ChasisNumber: Yup.string().required('Please provide telephone number'),
+    ManufactureYear: Yup.string().required('Please provide manufacture ID'),
+    client: Yup.string().required('Please provide client'),
 });
