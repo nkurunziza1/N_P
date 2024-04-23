@@ -23,6 +23,11 @@ import IconLogout from '@/components/Icon/IconLogout';
 const Header = () => {
     const router = useRouter();
 
+    const handleLogout = async () => {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+    };
+
     useEffect(() => {
         const selector = document.querySelector('ul.horizontal-menu a[href="' + window.location.pathname + '"]');
         if (selector) {
@@ -182,10 +187,10 @@ const Header = () => {
                                         </div>
                                     </li>
                                     <li className="border-t border-white-light dark:border-white-light/10">
-                                        <Link href="/auth/boxed-signin" className="!py-3 text-danger">
+                                        <button onClick={handleLogout} className="!py-3 text-danger">
                                             <IconLogout className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />
                                             Sign Out
-                                        </Link>
+                                        </button>
                                     </li>
                                 </ul>
                             </Dropdown>
