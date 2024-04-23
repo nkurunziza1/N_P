@@ -493,7 +493,7 @@ const Subscription = () => {
                         </div>
                         <div className=" flex flex-col justify-between md:flex-row">
                             <div>
-                                <h1 className=" text-3xl font-extrabold">GPs Info</h1>
+                                <h1 className=" text-3xl font-extrabold">GPS Info</h1>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Serial Number:</span>
 
@@ -504,47 +504,40 @@ const Subscription = () => {
 
                                     {subscriptions?.gps?.simcardNumber}
                                 </p>
-                                <p className="flex items-center gap-2">
-                                    <span className=" font-bold dark:text-white">createdAt:</span>
-
-                                    {subscriptions?.gps.createdAt}
-                                </p>
                                 <p className={`${subscriptions?.gps.gpsStatus === 1 ? 'text-success' : 'text-danger'} flex items-center gap-2 `}>
                                     <span className=" font-bold text-black dark:text-white">GPS Status:</span>
-
                                     {subscriptions?.gps.gpsStatus === 0 ? 'InActive' : 'Active'}
                                 </p>
                                 <p className="flex items-center gap-2">
-                                    <span className=" font-bold  dark:text-white">CreatedA:</span>
+                                    <span className=" font-bold  dark:text-white">CreatedAt:</span>
                                     {/*/@ts-ignore*/}
                                     {format(new Date(subscriptions?.gps.createdAt), 'dd/MM/yyyy HH:mm:ss')}
+                                </p>
+                                <p className="flex items-center gap-2">
+                                    <span className=" font-bold dark:text-white">ExpiredAt:</span>
+                                    {subscriptions?.gps.createdAt}
                                 </p>
                             </div>
                             <div>
                                 <h1 className=" text-3xl font-extrabold">Client Info</h1>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Firstname:</span>
-
                                     {subscriptions?.vehicle?.client.firstName}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Lastname:</span>
-
                                     {subscriptions?.vehicle?.client.lastName}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Email:</span>
-
                                     {subscriptions?.vehicle?.client.email}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Telephone:</span>
-
                                     {subscriptions?.vehicle?.client.phoneNumber}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">National ID:</span>
-
                                     {subscriptions?.vehicle?.client.NID}
                                 </p>
                             </div>

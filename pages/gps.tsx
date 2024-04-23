@@ -139,7 +139,7 @@ const Gps = () => {
                                     <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
                                         <div className={`md:col-span-2 ${submitCount ? (errors.serialNumber ? 'has-error' : 'has-success') : ''}`}>
                                             <label htmlFor="serialNumber">GPS serial number</label>
-                                            <Field name="serialNumber" type="text" id="serialNumber" placeholder="Enter chasis number" className="form-input" />
+                                            <Field name="serialNumber" type="text" id="serialNumber" placeholder="Enter serial number" className="form-input" />
 
                                             {submitCount ? (
                                                 errors.serialNumber ? (
@@ -153,7 +153,7 @@ const Gps = () => {
                                         </div>
                                         <div className={` ${submitCount ? (errors.simcardNumber ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
                                             <label htmlFor="simcardNumber">GPS simcard number </label>
-                                            <Field name="simcardNumber" type="text" id="simcardNumber" placeholder="Enter vehicle model" className="form-input" />
+                                            <Field name="simcardNumber" type="text" id="simcardNumber" placeholder="Enter simcard number" className="form-input" />
 
                                             {submitCount ? (
                                                 errors.simcardNumber ? (

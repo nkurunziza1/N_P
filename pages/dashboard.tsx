@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Dropdown from '../components/Dropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../store';
 import { setPageTitle } from '../store/themeConfigSlice';
@@ -33,7 +32,7 @@ const Dashboard = () => {
 
     const getClient = async () => {
         const data = await handlegetAllUsers(setLoading);
-        setClient(data.length);
+        setClient(data?.length);
         if (client?.length === 0) {
             setClient(0);
         }
@@ -42,7 +41,7 @@ const Dashboard = () => {
     const getSubscriptions = async () => {
         const data = await handlegetAllSubscription(setLoading);
 
-        setSubscription(data.length);
+        setSubscription(data?.length);
         if (subscriptions?.length === 0) {
             setSubscription(0);
         }

@@ -6,8 +6,6 @@ import { useDispatch } from 'react-redux';
 import IconBell from '@/components/Icon/IconBell';
 import IconStar from '@/components/Icon/IconStar';
 import IconHeart from '@/components/Icon/IconHeart';
-// import { MultiDrag } from 'sortablejs';
-// import Sortable from 'sortablejs';
 
 const items1 = [
     {
@@ -324,96 +322,6 @@ const DragAndDrop = () => {
                         </div>
                     </div>
                 </div>
-                {/* Multiple drag */}
-                {/* <div className="panel">
-                <div className="font-semibold text-lg dark:text-white mb-5">Multiple Drag</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12">
-                    <div>
-                        <ul id="example7">
-                            <ReactSortable
-                                list={multipleDrag1}
-                                setList={setMultipleDrag1}
-                                animation={200}
-                                group="multiple"
-                                multiDrag={true}
-                                selectedClass="selected"
-                                fallbackTolerance={3}
-                                ghostClass="gu-transit"
-
-                            >
-                                {multipleDrag1.map((item) => {
-                                    return (
-                                        <div key={item.id}>
-                                            <li className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img
-                                                            alt="avatar"
-                                                            src={`/assets/images/profile-${item.id}.jpeg`}
-                                                            className="w-11 h-11 rounded-full mx-auto"
-                                                        />
-                                                    </div>
-                                                    <div className="flex justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">
-                                                                {item.text}
-                                                            </div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        </div>
-                                    );
-                                })}
-                            </ReactSortable>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <ul id="example8">
-                            <ReactSortable
-                                list={multipleDrag2}
-                                setList={setMultipleDrag2}
-                                animation={200}
-                                group="multiple"
-                                multiDrag={true}
-                                selectedClass="selected"
-                                fallbackTolerance={3}
-                                ghostClass="gu-transit"
-
-                            >
-                                {multipleDrag2.map((item) => {
-                                    return (
-                                        <div key={item.id}>
-                                            <li className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img
-                                                            alt="avatar"
-                                                            src={`/assets/images/profile-${item.id}.jpeg`}
-                                                            className="w-11 h-11 rounded-full mx-auto"
-                                                        />
-                                                    </div>
-                                                    <div className="flex justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">
-                                                                {item.text}
-                                                            </div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        </div>
-                                    );
-                                })}
-                            </ReactSortable>
-                        </ul>
-                    </div>
-                </div>
-            </div>  */}
-
                 {/* News Feed */}
                 <div className="panel">
                     <div className="mb-5 text-lg font-semibold dark:text-white">News Feed</div>

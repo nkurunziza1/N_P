@@ -105,7 +105,7 @@ export const handleUpdateGps = async (setLoading: React.Dispatch<React.SetStateA
         setLoading(false);
         Swal.fire({
             icon: 'success',
-            title: 'Form submit  successfully',
+            title: 'Form submit successfully',
             toast: true,
             position: 'top',
             showConfirmButton: false,
@@ -143,7 +143,7 @@ export const handleView = async (id: any) => {
         });
         Swal.fire({
             icon: 'success',
-            title: '  delete user  successfully',
+            title: 'GPS deleted successfully',
             toast: true,
             position: 'top',
             showConfirmButton: false,
@@ -154,7 +154,7 @@ export const handleView = async (id: any) => {
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to delete user ! ',
+            title: 'failed to delete GPS!',
             text: error.response.data.message,
             position: 'top',
             showConfirmButton: false,

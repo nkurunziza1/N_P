@@ -18,7 +18,7 @@ export const handlegetAllUsers = async (setLoadingData: React.Dispatch<React.Set
         setLoadingData(false);
         Swal.fire({
             icon: 'error',
-            title: 'failed to get users ! ',
+            title: 'failed to get clients ! ',
             text: error.response?.data.message,
             position: 'top',
             showConfirmButton: false,
@@ -80,7 +80,7 @@ export const handleUpdateUser = async (setLoading: React.Dispatch<React.SetState
         setLoading(false);
         Swal.fire({
             icon: 'success',
-            title: 'Form submit  successfully',
+            title: 'Form submit successfully',
             toast: true,
             position: 'top',
             showConfirmButton: false,
@@ -118,7 +118,7 @@ export const handleView = async (id: any) => {
         });
         Swal.fire({
             icon: 'success',
-            title: '  delete user  successfully',
+            title: '  delete client successfully',
             toast: true,
             position: 'top',
             showConfirmButton: false,
@@ -129,7 +129,7 @@ export const handleView = async (id: any) => {
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to delete user ! ',
+            title: 'failed to delete client ! ',
             text: error.response.data.message,
             position: 'top',
             showConfirmButton: false,
@@ -149,7 +149,7 @@ export const handleDelete = async (id: any) => {
         });
         Swal.fire({
             icon: 'success',
-            title: '  delete user  successfully',
+            title: '  delete client successfully',
             toast: true,
             position: 'top',
             showConfirmButton: false,
@@ -160,7 +160,7 @@ export const handleDelete = async (id: any) => {
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to delete user ! ',
+            title: 'failed to delete client! ',
             text: error.response.data.message,
             position: 'top',
             showConfirmButton: false,

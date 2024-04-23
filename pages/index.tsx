@@ -1,6 +1,4 @@
-import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
-
 import { useEffect, useState } from 'react';
 import { Field, Form, Formik } from 'formik';
 import { useRouter } from 'next/router';
@@ -8,17 +6,11 @@ import BlankLayout from '@/components/Layouts/BlankLayout';
 import Dropdown from '@/components/Dropdown';
 import { useTranslation } from 'react-i18next';
 import IconCaretDown from '@/components/Icon/IconCaretDown';
-import IconMail from '@/components/Icon/IconMail';
-import IconLockDots from '@/components/Icon/IconLockDots';
-import IconInstagram from '@/components/Icon/IconInstagram';
-import IconFacebookCircle from '@/components/Icon/IconFacebookCircle';
-import IconTwitter from '@/components/Icon/IconTwitter';
-import IconGoogle from '@/components/Icon/IconGoogle';
 import { IRootState } from '@/store';
 import { setPageTitle, toggleLocale, toggleRTL } from '@/store/themeConfigSlice';
-
 import { loginSchema } from '@/components/utility/validation/Validation';
 import { handleLogin } from '@/components/api/login';
+import Image from 'next/image';
 
 const LoginBoxed = () => {
     const dispatch = useDispatch();
@@ -58,7 +50,6 @@ const LoginBoxed = () => {
             <div className="absolute inset-0">
                 <img src="/assets/images/auth/bg-gradient.png" alt="image" className="h-full w-full object-cover" />
             </div>
-
             <div className="relative flex min-h-screen items-center justify-center bg-[url(/assets/images/auth/map.png)] bg-cover bg-center bg-no-repeat px-6 py-10 dark:bg-[#060818] sm:px-16">
                 <img src="/assets/images/auth/coming-soon-object1.png" alt="image" className="absolute left-0 top-1/2 h-full max-h-[893px] -translate-y-1/2" />
                 <img src="/assets/images/auth/coming-soon-object2.png" alt="image" className="absolute left-24 top-0 h-40 md:left-[30%]" />
@@ -111,21 +102,21 @@ const LoginBoxed = () => {
                         </div>
                         <div className="mx-auto w-full max-w-[440px]">
                             <div className="mb-10">
+                            <Image src="/assets/images/logo.png" alt="Description of your image" width={250} height={250} />
                                 <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">Sign in</h1>
                                 <p className="text-base font-bold leading-normal text-white-dark">Enter your email and password to login</p>
                             </div>
 
                             <Formik
                                 initialValues={{
-                                    email: '', // Match with name attribute in Field component below
-                                    password: '', // Match with name attribute in Field component below
+                                    email: '',
+                                    password: '',
                                 }}
                                 validationSchema={loginSchema}
                                 onSubmit={async (values, { setSubmitting }) => {
-                                    console.log('values', values); // Check if values are being captured correctly
+                                    console.log('values', values);
                                     try {
                                         const response = await handleLogin(setLoading, values);
-                                        // Assuming handleLogin is working correctly and submitting data
                                     } catch (error) {
                                         console.log('error', error);
                                     } finally {
@@ -136,14 +127,14 @@ const LoginBoxed = () => {
                                 {({ errors, submitCount, touched, values }) => (
                                     <Form className="space-y-5 dark:text-white">
                                         <div>
-                                            <label htmlFor="email">Email</label> {/* Ensure htmlFor matches with id */}
+                                            <label htmlFor="email">Email</label>
                                             <div className={` ${submitCount ? (errors.email ? 'has-error' : 'has-success') : ''} relative text-white-dark`}>
-                                                <Field name="email" type="email" id="email" placeholder="Enter Email" className="form-input" /> {/* Ensure name matches with initialValues key */}
+                                                <Field name="email" type="email" id="email" placeholder="Enter Email" className="form-input" />
                                                 {submitCount ? errors.email ? <div className="mt-1 text-danger">{errors.email}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
                                             </div>
                                         </div>
                                         <div>
-                                            <label htmlFor="password">Password</label> {/* Ensure htmlFor matches with id */}
+                                            <label htmlFor="password">Password</label>
                                             <div className={` ${submitCount ? (errors.password ? 'has-error' : 'has-success') : ''}relative text-white-dark`}>
                                                 <Field name="password" type="password" id="password" placeholder="Enter Password" className="form-input" />{' '}
                                                 {submitCount ? errors.password ? <div className="mt-1 text-danger">{errors.password}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}

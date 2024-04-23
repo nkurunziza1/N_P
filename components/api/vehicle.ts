@@ -1,11 +1,9 @@
 import axios from 'axios';
-
 import Swal from 'sweetalert2';
 import { VehicleType } from '../utility/types/types';
 
 export const handleGetVehicle = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
     const token = localStorage.getItem('token');
-
     setLoadingData(true);
     try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/vehicle/getAll`, {
@@ -20,7 +18,7 @@ export const handleGetVehicle = async (setLoadingData: React.Dispatch<React.SetS
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to get Vehicles ! ',
+            title: 'failed to get Vehicles! ',
             text: error.response?.data.message,
             position: 'top',
             showConfirmButton: false,
@@ -93,7 +91,7 @@ export const handleDeleteVehicle = async (id: any) => {
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to delete user ! ',
+            title: 'failed to delete vehicle!',
             text: error.response.data.message,
             position: 'top',
             showConfirmButton: false,
@@ -115,7 +113,7 @@ export const handleUpdateVehicle = async (setLoading: React.Dispatch<React.SetSt
         setLoading(false);
         Swal.fire({
             icon: 'success',
-            title: 'Form submit  successfully',
+            title: 'Form submit successfully',
             toast: true,
             position: 'top',
             showConfirmButton: false,
@@ -138,7 +136,6 @@ export const handleUpdateVehicle = async (setLoading: React.Dispatch<React.SetSt
             timer: 3000,
             padding: '10px 20px',
         });
-
         return error.response.data.message;
     }
 };
@@ -153,7 +150,7 @@ export const handleView = async (id: any) => {
         });
         Swal.fire({
             icon: 'success',
-            title: '  delete user  successfully',
+            title: 'delete vehicle successfully',
             toast: true,
             position: 'top',
             showConfirmButton: false,
@@ -164,7 +161,7 @@ export const handleView = async (id: any) => {
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
-            title: 'failed to delete user ! ',
+            title: 'failed to delete vehicle ! ',
             text: error.response.data.message,
             position: 'top',
             showConfirmButton: false,
