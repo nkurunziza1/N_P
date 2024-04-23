@@ -65,7 +65,7 @@ export interface SubscriptionEnterface {
     id?: string;
     expiredAt: string;
     createdAt: string;
-    vehicle: VehicleInterface;
+    vehicle?: VehicleInterface;
     gps: string;
 }
 

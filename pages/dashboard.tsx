@@ -66,7 +66,7 @@ const Dashboard = () => {
                     {/* Bounce Rate */}
                     <div className="panel bg-gradient-to-r from-fuchsia-500 to-fuchsia-400">
                         <div className="flex justify-between">
-                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Gps</div>
+                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">GPS</div>
                         </div>
                         <div className="mt-5 flex items-center">
                             <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> 49.10 </div>

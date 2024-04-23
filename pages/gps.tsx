@@ -138,7 +138,7 @@ const Gps = () => {
                                 <Form className="space-y-5">
                                     <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
                                         <div className={`md:col-span-2 ${submitCount ? (errors.serialNumber ? 'has-error' : 'has-success') : ''}`}>
-                                            <label htmlFor="serialNumber">Gps serial number</label>
+                                            <label htmlFor="serialNumber">GPS serial number</label>
                                             <Field name="serialNumber" type="text" id="serialNumber" placeholder="Enter chasis number" className="form-input" />
 
                                             {submitCount ? (
@@ -152,7 +152,7 @@ const Gps = () => {
                                             )}
                                         </div>
                                         <div className={` ${submitCount ? (errors.simcardNumber ? 'has-error' : 'has-success') : ''} md:col-span-2`}>
-                                            <label htmlFor="simcardNumber">Gps simcard number </label>
+                                            <label htmlFor="simcardNumber">GPS simcard number </label>
                                             <Field name="simcardNumber" type="text" id="simcardNumber" placeholder="Enter vehicle model" className="form-input" />
 
                                             {submitCount ? (
@@ -178,7 +178,7 @@ const Gps = () => {
             <div className="panel flex items-center justify-between overflow-x-auto whitespace-nowrap p-3 text-primary">
                 <div className="rounded-full bg-primary p-1.5 text-white ring-2 ring-primary/30 ltr:mr-3 rtl:ml-3">List of Gps</div>
                 <Button className="bg-primary" onClick={showModel}>
-                    Register GPs +
+                    Register GPS +
                 </Button>
             </div>
             <div className="panel mt-6">

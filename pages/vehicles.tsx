@@ -263,7 +263,7 @@ const Client = () => {
                                         </div>
                                         <div className="z-50 md:col-span-2">
                                             <label htmlFor="userSelect" className="">
-                                                Select User
+                                                Select Client
                                             </label>
 
                                             <Select
@@ -294,7 +294,7 @@ const Client = () => {
             <div className="panel flex items-center justify-between overflow-x-auto whitespace-nowrap p-3 text-primary">
                 <div className="rounded-full bg-primary p-1.5 text-white ring-2 ring-primary/30 ltr:mr-3 rtl:ml-3">List of Vehicles</div>
                 <Button className="bg-primary" onClick={showModel}>
-                    create vehicle +
+                    Create Vehicle +
                 </Button>
             </div>
             <div className="panel mt-6">
@@ -482,7 +482,7 @@ const Client = () => {
                                         <div className={` custom-select grid grid-cols-1 gap-5 md:grid-cols-4`}>
                                             <div className="md:col-span-2">
                                                 <label htmlFor="manufactureYear" className="">
-                                                    Select Year
+                                                    Manufacture Year
                                                 </label>
 
                                                 <Select

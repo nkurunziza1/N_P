@@ -9,8 +9,8 @@ import { setPageTitle } from '@/store/themeConfigSlice';
 import { Button } from '@mantine/core';
 import IconEye from '@/components/Icon/IconEye';
 import { Field, Form, Formik } from 'formik';
-import { subscriptionSchema, vehicleSchema } from '@/components/utility/validation/Validaation';
-import { GPSType, SubscriptionEnterface, SubscriptionType, UsersType, VehicleInterface, VehicleType } from '@/components/utility/types/types';
+import { subscriptionSchema } from '@/components/utility/validation/Validation';
+import { GPSType, SubscriptionEnterface, SubscriptionType, VehicleType } from '@/components/utility/types/types';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import Modal from '@/components/model/Model';
@@ -71,7 +71,7 @@ const Subscription = () => {
                     item.createdAt.toLowerCase().includes(search.toLowerCase()) ||
                     item.expiredAt.toLowerCase().includes(search.toLowerCase()) ||
                     item.gps.toString().toLowerCase().includes(search.toLowerCase()) ||
-                    item.vehicle.client.firstName.toLowerCase().includes(search.toLowerCase())
+                    item.vehicle?.client.firstName.toLowerCase().includes(search.toLowerCase())
                 );
             });
         });
@@ -223,7 +223,7 @@ const Subscription = () => {
                                         </div>
                                         <div className="z-50 md:col-span-2">
                                             <label htmlFor="gpsSelect" className="">
-                                                Select Gps
+                                                Select GPS
                                             </label>
 
                                             <Select
@@ -292,7 +292,7 @@ const Subscription = () => {
                                         sortable: true,
                                         render: ({ vehicle }) => (
                                             <div className="flex w-max items-center">
-                                                <div>{vehicle.client.phoneNumber}</div>
+                                                <div>{vehicle?.client.phoneNumber}</div>
                                             </div>
                                         ),
                                     },
@@ -312,7 +312,7 @@ const Subscription = () => {
                                         sortable: true,
                                         render: ({ vehicle }) => (
                                             <div className="flex w-max items-center">
-                                                <div>{vehicle.PlateNumber}</div>
+                                                <div>{vehicle?.PlateNumber}</div>
                                             </div>
                                         ),
                                     },
@@ -477,7 +477,7 @@ const Subscription = () => {
             )}
 
             {viewModal && (
-                <Modal title={`Subscription: ${subscriptions?.vehicle.client.firstName}`} modal={viewModal} setModal={setViewModal}>
+                <Modal title={`Subscription: ${subscriptions?.vehicle?.client.firstName}`} modal={viewModal} setModal={setViewModal}>
                     <div className="panel" id="custom_styles">
                         <div className="mb-5 grid  grid-cols-3 gap-4 md:w-full">
                             <p className="flex items-center gap-2">
@@ -497,12 +497,12 @@ const Subscription = () => {
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Serial Number:</span>
 
-                                    {subscriptions?.gps.serialNumber}
+                                    {subscriptions?.gps?.serialNumber}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Simcard Number:</span>
 
-                                    {subscriptions?.gps.simcardNumber}
+                                    {subscriptions?.gps?.simcardNumber}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">createdAt:</span>
@@ -525,27 +525,27 @@ const Subscription = () => {
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Firstname:</span>
 
-                                    {subscriptions?.vehicle.client.firstName}
+                                    {subscriptions?.vehicle?.client.firstName}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Lastname:</span>
 
-                                    {subscriptions?.vehicle.client.lastName}
+                                    {subscriptions?.vehicle?.client.lastName}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Email:</span>
 
-                                    {subscriptions?.vehicle.client.email}
+                                    {subscriptions?.vehicle?.client.email}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">Telephone:</span>
 
-                                    {subscriptions?.vehicle.client.phoneNumber}
+                                    {subscriptions?.vehicle?.client.phoneNumber}
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <span className=" font-bold dark:text-white">National ID:</span>
 
-                                    {subscriptions?.vehicle.client.NID}
+                                    {subscriptions?.vehicle?.client.NID}
                                 </p>
                             </div>
                         </div>

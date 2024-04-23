@@ -114,7 +114,7 @@ const Client = () => {
 
     return (
         <div>
-            <Modal title="Create User" modal={modal} setModal={setModal}>
+            <Modal title="Create Client" modal={modal} setModal={setModal}>
                 <div className="panel" id="custom_styles">
                     <div className="mb-5">
                         <Formik
@@ -201,7 +201,7 @@ const Client = () => {
             <div className="panel flex items-center justify-between overflow-x-auto whitespace-nowrap p-3 text-primary">
                 <div className="rounded-full bg-primary p-1.5 text-white ring-2 ring-primary/30 ltr:mr-3 rtl:ml-3">List of Clients</div>
                 <Button className="bg-primary" onClick={showModel}>
-                    Register client +
+                    Register Client +
                 </Button>
             </div>
             <div className="panel mt-6">
