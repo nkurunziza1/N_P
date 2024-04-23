@@ -13,10 +13,46 @@ const Dashboard = () => {
     useEffect(() => {
         dispatch(setPageTitle('Dashboard'));
     });
-    const [ActiveSubscription, setActiveSubscriptions] = useState([]);
-    const [InActiveSubscription, setInActiveSubscriptions] = useState([]);
-    const [client, setClient] = useState([]);
-    const [gps, setGps] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [ActiveGps, setActiveGps] = useState<any>();
+    const [InActiveGps, setInActiveGps] = useState<any>();
+    const [client, setClient] = useState<any>();
+    const [subscriptions, setSubscription] = useState<any>();
+
+    const getGps = async () => {
+        const data = await handlegetAllGps(setLoading);
+        setActiveGps(data?.filter((gps: any) => gps.gpsStatus === 1).length);
+        setInActiveGps(data?.filter((gps: any) => gps.gpsStatus === 0).length);
+        if (ActiveGps?.length === 0) {
+            setActiveGps(0);
+        }
+        if (InActiveGps?.length === 0) {
+            setInActiveGps(0);
+        }
+    };
+
+    const getClient = async () => {
+        const data = await handlegetAllUsers(setLoading);
+        setClient(data.length);
+        if (client?.length === 0) {
+            setClient(0);
+        }
+    };
+
+    const getSubscriptions = async () => {
+        const data = await handlegetAllSubscription(setLoading);
+
+        setSubscription(data.length);
+        if (subscriptions?.length === 0) {
+            setSubscription(0);
+        }
+    };
+
+    useEffect(() => {
+        getGps();
+        getClient();
+        getSubscriptions();
+    }, []);
 
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
 
@@ -36,20 +72,20 @@ const Dashboard = () => {
                 <div className="mb-6 grid grid-cols-1 gap-6 text-white sm:grid-cols-2 xl:grid-cols-4">
                     <div className="panel bg-gradient-to-r from-cyan-500 to-cyan-400">
                         <div className="flex justify-between">
-                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Active Subscription</div>
+                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Active GPS</div>
                         </div>
                         <div className="mt-5 flex items-center">
-                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> 170.46 </div>
+                            <div className="text-3xl font-bold transition-all duration-300 ltr:mr-3 rtl:ml-3"> {loading ? <div>loading...</div> : ActiveGps}</div>
                         </div>
                     </div>
 
                     {/* Sessions */}
                     <div className="panel bg-gradient-to-r from-violet-500 to-violet-400">
                         <div className="flex justify-between">
-                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Inactive Subscription</div>
+                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Inactive GPS</div>
                         </div>
                         <div className="mt-5 flex items-center">
-                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> 74,137 </div>
+                            <div className="text-3xl font-bold transition-all duration-300 ltr:mr-3 rtl:ml-3"> {loading ? <div>loading...</div> : InActiveGps}</div>
                         </div>
                     </div>
 
@@ -59,17 +95,17 @@ const Dashboard = () => {
                             <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Client</div>
                         </div>
                         <div className="mt-5 flex items-center">
-                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> 38,085</div>
+                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> {loading ? <div>loading...</div> : client}</div>
                         </div>
                     </div>
 
                     {/* Bounce Rate */}
                     <div className="panel bg-gradient-to-r from-fuchsia-500 to-fuchsia-400">
                         <div className="flex justify-between">
-                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">GPS</div>
+                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">subscriptions</div>
                         </div>
                         <div className="mt-5 flex items-center">
-                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> 49.10 </div>
+                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> {loading ? <div>loading...</div> : subscriptions} </div>
                         </div>
                     </div>
                 </div>
