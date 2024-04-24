@@ -404,7 +404,8 @@ const Client = () => {
                                 validationSchema={vehicleSchema}
                                 onSubmit={async (values, { setSubmitting }) => {
                                     try {
-                                        console.log('editUserData', values);
+                                        values.ManufactureYear = selectedYear;
+                                        values.client = selectedUser;
                                         const response = await handleUpdateVehicle(setLoading, values, editVehicleData?.id);
                                         setIsEditModal(false);
                                         getVehicle();

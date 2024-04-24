@@ -102,7 +102,7 @@ const LoginBoxed = () => {
                         </div>
                         <div className="mx-auto w-full max-w-[440px]">
                             <div className="mb-10">
-                            <Image src="/assets/images/logo.png" alt="Description of your image" width={250} height={250} />
+                                <Image src="/assets/images/logo.png" alt="Description of your image" width={250} height={250} />
                                 <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">Sign in</h1>
                                 <p className="text-base font-bold leading-normal text-white-dark">Enter your email and password to login</p>
                             </div>
@@ -142,7 +142,7 @@ const LoginBoxed = () => {
                                         </div>
 
                                         <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
-                                            Sign in
+                                            {loading ? 'Logging in...' : '  Sign in'}
                                         </button>
                                     </Form>
                                 )}

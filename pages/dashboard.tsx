@@ -22,10 +22,10 @@ const Dashboard = () => {
         const data = await handlegetAllGps(setLoading);
         setActiveGps(data?.filter((gps: any) => gps.gpsStatus === 1).length);
         setInActiveGps(data?.filter((gps: any) => gps.gpsStatus === 0).length);
-        if (ActiveGps?.length === 0) {
+        if (!ActiveGps || ActiveGps?.length === 0) {
             setActiveGps(0);
         }
-        if (InActiveGps?.length === 0) {
+        if (!InActiveGps || InActiveGps?.length === 0) {
             setInActiveGps(0);
         }
     };
@@ -42,7 +42,7 @@ const Dashboard = () => {
         const data = await handlegetAllSubscription(setLoading);
 
         setSubscription(data?.length);
-        if (subscriptions?.length === 0) {
+        if (!subscriptions || subscriptions?.length === 0) {
             setSubscription(0);
         }
     };
