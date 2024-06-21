@@ -1,74 +1,39 @@
-export type UsersType = {
-    id?: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phoneNumber: string;
-    NID: string;
-};
-
 export interface User {
-    id?: string;
-    firstName: string;
-    lastName: string;
+    _id?: string;
+    fullname: string;
     email: string;
-    phoneNumber: string;
-    NID: string;
-    createdAt: string | Date;
+    telephone: string;
+    role: string;
 }
 
-export type VehicleType = {
-    id?: string;
-    VehicleType: string;
-    PlateNumber: string;
-    VehicleModel: string;
-    ChasisNumber: string;
-    ManufactureYear: string;
-    client: number | UsersType | string;
+export type ScheduleType = {
+    _id?: string;
+    date: string;
+    location: string;
+    telephone: string;
+    loadType: string;
+    status?: string;
+};
+export type Schedule = {
+    _id?: string;
+    date: string;
+    location: string;
+    telephone: string;
+    loadType: string;
+    status?: string;
+};
+export type GarbageType = {
+    schedule: Schedule;
 };
 
-export interface VehicleInterface {
-    id?: string;
-    VehicleType: string;
-    PlateNumber: string;
-    VehicleModel: string;
-    ChasisNumber: string;
-    ManufactureYear: string;
-    client: UsersType;
-    createdAt: string;
-}
-
-export type GPSType = {
-    id?: string;
-    serialNumber: string;
-    simcardNumber: string;
-    gpsStatus?: number;
-    createdAt?: string;
+export type RoleType = {
+    role: string;
 };
 
-export interface GPS {
-    id: string;
-    serialNumber: string;
-    simcardNumber: string;
-    gpsStatus: number;
-    createdAt: string;
-}
-
-export type SubscriptionType = {
-    id?: string;
-    createdAt: string;
-    expiredAt: string;
-    vehicle: VehicleInterface;
-    gps: GPSType;
+export type assignType = {
+    schedule: string;
+    collector: string;
 };
-
-export interface SubscriptionEnterface {
-    id?: string;
-    expiredAt: string;
-    createdAt: string;
-    vehicle?: VehicleInterface;
-    gps: GPSType;
-}
 
 export type loginFormData = {
     email: string;

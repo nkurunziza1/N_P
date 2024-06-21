@@ -9,7 +9,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import IconCaretsDown from '@/components/Icon/IconCaretsDown';
 
-
 const Sidebar = () => {
     const router = useRouter();
     const [currentMenu, setCurrentMenu] = useState<string>('');
@@ -56,9 +55,25 @@ const Sidebar = () => {
         selector?.classList.add('active');
     };
 
+    const [isUserHouseholder, setIsUserHOuseholder] = useState(false);
+    const [isCollector, setIsCollector] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+
     const dispatch = useDispatch();
     const { t } = useTranslation();
-
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('userdata') || '{}');
+        console.log('user', user);
+        if (user.role === 'householder') {
+            setIsUserHOuseholder(true);
+        }
+        if (user.role === 'admin') {
+            setIsAdmin(true);
+        }
+        if (user.role === 'collector') {
+            setIsCollector(true);
+        }
+    }, []);
     return (
         <div className={semidark ? 'dark' : ''}>
             <nav
@@ -81,26 +96,24 @@ const Sidebar = () => {
                     <PerfectScrollbar className="relative h-[calc(100vh-80px)]">
                         <ul className="relative space-y-0.5 p-4 py-0 font-semibold">
                             <li className="menu nav-item">
-
-
                                 <AnimateHeight duration={300} height={200}>
                                     <ul className="sub-menu text-gray-500">
-                                        <li>
-                                            <Link href="/dashboard">{t('Dashboard')}</Link>
-                                        </li>
-                                        <li>
-                                            <Link href="/client">{t('Client')}</Link>
-                                        </li>
-                                        <li>
-                                            <Link href="/vehicles">{t('Vehicle')}</Link>
-                                        </li>
-                                        <li>
-                                            <Link href="/gps">{t('GPS')}</Link>
-                                        </li>
-                                        <li>
-                                            <Link href="/subscription">{t('Subscription')}</Link>
-                                        </li>
-
+                                        {isUserHouseholder && (
+                                            <li>
+                                                <Link href="/schedule">{t('Schedule')}</Link>
+                                            </li>
+                                        )}
+                                        {isCollector && (
+                                            <li>
+                                                <Link href="/garbage">{t('Your Garbages')}</Link>
+                                            </li>
+                                        )}
+                                        {isAdmin && (
+                                            <li>
+                                                <Link href="/users">{t('Users')}</Link>
+                                                <Link href="/admin">{t('Schedules')}</Link>
+                                            </li>
+                                        )}
                                     </ul>
                                 </AnimateHeight>
                             </li>

@@ -1,20 +1,20 @@
 import axios from 'axios';
-import { SubscriptionType } from '../utility/types/types';
+import { ScheduleType, assignType } from '../utility/types/types';
 import Swal from 'sweetalert2';
 
-export const handlegetAllSubscription = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
+export const handlegetscheduledWasteCollection = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
     setLoadingData(true);
     const token = localStorage.getItem('token');
 
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/subscription/getAll`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, {
             headers: {
-                'x-auth': `${token}`,
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
             },
         });
         setLoadingData(false);
-        console.log('data', response.data.data.content);
-        return response.data.data.content;
+        return response.data.collections;
     } catch (error: any) {
         Swal.fire({
             icon: 'error',
@@ -28,14 +28,15 @@ export const handlegetAllSubscription = async (setLoadingData: React.Dispatch<Re
     }
 };
 
-export const handleCreationSubscription = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: SubscriptionType) => {
+export const handlescheduleWasteCollection = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: ScheduleType) => {
     const token = localStorage.getItem('token');
 
     setLoading(true);
     try {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/subscription/create`, data, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, data, {
             headers: {
-                'x-auth': `${token}`,
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
             },
         });
         Swal.fire({
@@ -61,45 +62,15 @@ export const handleCreationSubscription = async (setLoading: React.Dispatch<Reac
     }
 };
 
-export const handleDeleteSubscription = async (id: any) => {
-    const token = localStorage.getItem('token');
-    try {
-        const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/subscription/delete/${id}`, {
-            headers: {
-                'x-auth': `${token}`,
-            },
-        });
-
-        Swal.fire({
-            icon: 'success',
-            text: response?.data.message,
-            toast: true,
-            position: 'top',
-            showConfirmButton: false,
-            timer: 3000,
-            padding: '10px 20px',
-        });
-    } catch (error: any) {
-        console.log('error', error);
-        Swal.fire({
-            icon: 'error',
-            text: error.response?.data.message,
-            position: 'top',
-            showConfirmButton: false,
-            timer: 3000,
-            padding: '10px 20px',
-        });
-    }
-};
-
-export const handleUpdateSubscription = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, id: any, data: SubscriptionType) => {
+export const handleAssignSubmit = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>, data: assignType) => {
     const token = localStorage.getItem('token');
 
     setLoading(true);
     try {
-        const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/subscription/update/${id}`, data, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/collector/assign`, data, {
             headers: {
-                'x-auth': `${token}`,
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
             },
         });
         Swal.fire({
@@ -122,5 +93,31 @@ export const handleUpdateSubscription = async (setLoading: React.Dispatch<React.
             padding: '10px 20px',
         });
         setLoading(false);
+    }
+};
+
+export const handlegetsAssignedWasteCollection = async (setLoadingData: React.Dispatch<React.SetStateAction<boolean>>) => {
+    setLoadingData(true);
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/collector/assign`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        setLoadingData(false);
+        return response.data.assignments;
+    } catch (error: any) {
+        Swal.fire({
+            icon: 'error',
+            text: error.response?.data.message,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+            padding: '10px 20px',
+        });
+        setLoadingData(false);
     }
 };

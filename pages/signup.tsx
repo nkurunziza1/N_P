@@ -13,7 +13,7 @@ import { handleLogin, handleSignup } from '@/components/api/login';
 import Image from 'next/image';
 import Link from 'next/link';
 
-const LoginBoxed = () => {
+export const Signup = () => {
     const [isSignup, setIsSignup] = useState(false);
     const dispatch = useDispatch();
     useEffect(() => {
@@ -65,12 +65,14 @@ const LoginBoxed = () => {
                                 initialValues={{
                                     email: '',
                                     password: '',
+                                    fullname: '',
+                                    telephone: '',
                                 }}
-                                validationSchema={loginSchema}
+                                validationSchema={signupSchema}
                                 onSubmit={async (values, { setSubmitting }) => {
-                                    console.log('values', values);
                                     try {
-                                        const response = await handleLogin(setLoading, values);
+                                        const response = await handleSignup(setLoading, values);
+                                        setIsSignup(false);
                                     } catch (error) {
                                         console.log('error', error);
                                     } finally {
@@ -94,16 +96,35 @@ const LoginBoxed = () => {
                                                 {submitCount ? errors.password ? <div className="mt-1 text-danger">{errors.password}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
                                             </div>
                                         </div>
+                                        <div>
+                                            <label htmlFor="fullname">Full name</label>
+                                            <div className={` ${submitCount ? (errors.fullname ? 'has-error' : 'has-success') : ''}relative text-white-dark`}>
+                                                <Field name="fullname" type="text" id="fullname" placeholder="Enter Full name" className="form-input" />{' '}
+                                                {submitCount ? errors.fullname ? <div className="mt-1 text-danger">{errors.fullname}</div> : <div className="mt-1 text-success">Looks Good!</div> : ''}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label htmlFor="telephone">Telephone</label>
+                                            <div className={` ${submitCount ? (errors.telephone ? 'has-error' : 'has-success') : ''}relative text-white-dark`}>
+                                                <Field name="telephone" type="text" id="telephone" placeholder="Enter Telephone" className="form-input" />{' '}
+                                                {submitCount ? (
+                                                    errors.telephone ? (
+                                                        <div className="mt-1 text-danger">{errors.telephone}</div>
+                                                    ) : (
+                                                        <div className="mt-1 text-success">Looks Good!</div>
+                                                    )
+                                                ) : (
+                                                    ''
+                                                )}
+                                            </div>
+                                        </div>
 
                                         <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
-                                            {loading ? 'Logging in...' : '  Sign In'}
+                                            {loading ? 'Logging in...' : '  Signup'}
                                         </button>
-                                        <p className="cursor-pointer">
-                                            dont'have an account{' '}
-                                            <Link href="/signup" className="text-blue-500">
-                                                Signup here
-                                            </Link>
-                                        </p>
+                                        <Link className="cursor-pointer text-blue-500" href="/">
+                                            Back to login
+                                        </Link>
                                     </Form>
                                 )}
                             </Formik>
@@ -114,7 +135,8 @@ const LoginBoxed = () => {
         </div>
     );
 };
-LoginBoxed.getLayout = (page: any) => {
+export default Signup
+
+Signup.getLayout = (page: any) => {
     return <BlankLayout>{page}</BlankLayout>;
 };
-export default LoginBoxed;
